@@ -5,12 +5,12 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase
 
 // Configuración de tu proyecto en Firebase Console
 const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "tu-proyecto.firebaseapp.com",
-    projectId: "tu-proyecto-id",
-    storageBucket: "tu-proyecto.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef123456"
+    apiKey: "AIzaSyBuALpL3yASG71IY5wPkKi4gPtkIC4S_2w",
+    authDomain: "citafacil-7d175.firebaseapp.com",
+    projectId: "citafacil-7d175",
+    storageBucket: "citafacil-7d175.firebasestorage.app",
+    messagingSenderId: "247800903091",
+    appId: "1:247800903091:web:71367551f04a511bc947c6"
 };
 
 // Inicializar Firebase
