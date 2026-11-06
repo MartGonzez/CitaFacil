@@ -12,6 +12,7 @@ import {
     getDocs, 
     setDoc, 
     addDoc, 
+    updateDoc, 
     deleteDoc, 
     query, 
     where 
@@ -57,6 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Formulario agregar servicio
     document.getElementById('add-service-form').addEventListener('submit', handleAddService);
     
+    // Formulario actualizar perfil / landing page
+    const profileForm = document.getElementById('profile-config-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', handleUpdateProfile);
+    }
+
     // Copiar URL pública
     document.getElementById('btn-copy-url').addEventListener('click', () => {
         const input = document.getElementById('public-url-input');
@@ -131,7 +138,7 @@ async function handleAuthSubmit(e) {
 // Cargar perfil del negocio autenticado
 async function loadTenantProfile(uid) {
     try {
-        const tenantDoc = await getDoc(doc(db, "tenants", uid));
+        const tenantDoc = await getDoc(doc(doc(db, "tenants", uid).path));
         if (tenantDoc.exists()) {
             currentTenant = { id: tenantDoc.id, ...tenantDoc.data() };
             
@@ -140,12 +147,83 @@ async function loadTenantProfile(uid) {
             document.getElementById('public-url-input').value = publicUrl;
             document.getElementById('btn-visit-public').href = `../agenda.html?b=${currentTenant.slug}`;
 
+            // Precargar datos en el formulario de la Landing Page
+            populateProfileForm();
+
             // Cargar datos del dashboard
             await loadBookings();
             await loadServicesAdmin();
         }
     } catch (error) {
         console.error("Error al cargar perfil:", error);
+    }
+}
+
+// Precargar campos del formulario de la Landing Page
+function populateProfileForm() {
+    if (!currentTenant) return;
+
+    const descEl = document.getElementById('edit-description');
+    const addressEl = document.getElementById('edit-address');
+    const phoneEl = document.getElementById('edit-phone');
+    const logoEl = document.getElementById('edit-logo');
+    const coverEl = document.getElementById('edit-cover');
+    const instaEl = document.getElementById('edit-instagram');
+    const photosEl = document.getElementById('edit-photos');
+
+    if (descEl) descEl.value = currentTenant.description || '';
+    if (addressEl) addressEl.value = currentTenant.address || '';
+    if (phoneEl) phoneEl.value = currentTenant.phone || '';
+    if (logoEl) logoEl.value = currentTenant.logoUrl || currentTenant.icon || '';
+    if (coverEl) coverEl.value = currentTenant.coverUrl || '';
+    if (instaEl) instaEl.value = currentTenant.instagram || '';
+    if (photosEl) photosEl.value = currentTenant.photos ? currentTenant.photos.join(', ') : '';
+}
+
+// Guardar cambios del perfil / landing page en Firestore
+async function handleUpdateProfile(e) {
+    e.preventDefault();
+    if (!currentTenant) return;
+
+    const description = document.getElementById('edit-description').value.trim();
+    const address = document.getElementById('edit-address').value.trim();
+    const phone = document.getElementById('edit-phone').value.trim();
+    const logoUrl = document.getElementById('edit-logo').value.trim();
+    const coverUrl = document.getElementById('edit-cover').value.trim();
+    const instagram = document.getElementById('edit-instagram').value.trim();
+    const photosRaw = document.getElementById('edit-photos').value.trim();
+
+    const photos = photosRaw ? photosRaw.split(',').map(p => p.trim()).filter(p => p !== '') : [];
+
+    try {
+        await updateDoc(doc(db, "tenants", currentTenant.id), {
+            description,
+            address,
+            phone,
+            logoUrl,
+            icon: logoUrl,
+            coverUrl,
+            instagram,
+            photos
+        });
+
+        // Actualizar datos locales
+        currentTenant = {
+            ...currentTenant,
+            description,
+            address,
+            phone,
+            logoUrl,
+            icon: logoUrl,
+            coverUrl,
+            instagram,
+            photos
+        };
+
+        alert("¡Los datos de tu landing page se han actualizado exitosamente!");
+    } catch (error) {
+        console.error("Error al actualizar perfil:", error);
+        alert("Ocurrió un error al guardar los cambios: " + error.message);
     }
 }
 
