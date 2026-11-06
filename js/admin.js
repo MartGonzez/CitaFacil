@@ -1,4 +1,4 @@
-import { auth, db, storage } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
@@ -15,11 +15,6 @@ import {
     updateDoc, 
     deleteDoc 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { 
-    ref, 
-    uploadBytes, 
-    getDownloadURL 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 let currentTenant = null;
 let isRegisterMode = false;
@@ -164,9 +159,11 @@ function populateProfileForm() {
     if (photosEl) photosEl.value = currentTenant.photos ? currentTenant.photos.join(', ') : '';
 }
 
-// Función helper para comprimir imágenes antes de subir
-function compressImage(file, maxWidth = 1080, quality = 0.8) {
-    return new Promise((resolve) => {
+/**
+ * Función que convierte cualquier File de imagen a un string WebP en Base64 ultra liviano
+ */
+function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
@@ -188,54 +185,50 @@ function compressImage(file, maxWidth = 1080, quality = 0.8) {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                canvas.toBlob((blob) => {
-                    resolve(blob);
-                }, 'image/jpeg', quality);
+                // Convertir a Data URL WebP comprimido
+                const base64DataUrl = canvas.toDataURL('image/webp', quality);
+                resolve(base64DataUrl);
             };
+            img.onerror = (err) => reject(err);
         };
+        reader.onerror = (err) => reject(err);
     });
 }
 
-// Subir un archivo comprimido a Firebase Storage
-async function uploadImageFile(file, pathFolder) {
-    const compressedBlob = await compressImage(file);
-    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-    const storageRef = ref(storage, `tenants/${currentTenant.id}/${pathFolder}/${fileName}`);
-    const snapshot = await uploadBytes(storageRef, compressedBlob);
-    return await getDownloadURL(snapshot.ref);
-}
-
-// Guardar cambios del perfil (Soporta archivos y URLs)
+// Guardar cambios del perfil directamente en Firestore como Base64 (Sin Storage)
 async function handleUpdateProfile(e) {
     e.preventDefault();
     if (!currentTenant) return;
 
     const saveBtn = document.getElementById('btn-save-profile');
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Subiendo archivos y guardando...';
+    saveBtn.textContent = 'Procesando imágenes y guardando...';
 
     try {
         let logoUrl = document.getElementById('edit-logo').value.trim();
         let coverUrl = document.getElementById('edit-cover').value.trim();
 
+        // Si el usuario seleccionó un archivo de logo, lo convertimos a WebP Base64 (máx 400px)
         const logoFileInput = document.getElementById('upload-logo-file');
         if (logoFileInput && logoFileInput.files.length > 0) {
-            logoUrl = await uploadImageFile(logoFileInput.files[0], "logo");
+            logoUrl = await fileToWebPBase64(logoFileInput.files[0], 400, 0.8);
         }
 
+        // Si seleccionó archivo de banner, lo convertimos a WebP Base64 (máx 1000px)
         const coverFileInput = document.getElementById('upload-cover-file');
         if (coverFileInput && coverFileInput.files.length > 0) {
-            coverUrl = await uploadImageFile(coverFileInput.files[0], "cover");
+            coverUrl = await fileToWebPBase64(coverFileInput.files[0], 1000, 0.75);
         }
 
         const photosRaw = document.getElementById('edit-photos').value.trim();
         let photoUrls = photosRaw ? photosRaw.split(',').map(p => p.trim()).filter(p => p !== '') : [];
 
+        // Si seleccionó fotos del local, las convertimos una por una (máx 800px)
         const galleryFilesInput = document.getElementById('upload-gallery-files');
         if (galleryFilesInput && galleryFilesInput.files.length > 0) {
             for (let i = 0; i < galleryFilesInput.files.length; i++) {
-                const uploadedUrl = await uploadImageFile(galleryFilesInput.files[i], "gallery");
-                photoUrls.push(uploadedUrl);
+                const base64Photo = await fileToWebPBase64(galleryFilesInput.files[i], 800, 0.7);
+                photoUrls.push(base64Photo);
             }
         }
 
@@ -268,7 +261,8 @@ async function handleUpdateProfile(e) {
         };
 
         populateProfileForm();
-        alert("¡Los datos de tu landing page se han actualizado exitosamente!");
+        alert("¡Tu perfil y fotos se guardaron exitosamente!");
+
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
         alert("Ocurrió un error al guardar los cambios: " + error.message);
