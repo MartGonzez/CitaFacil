@@ -13,29 +13,30 @@
     --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
 
 body {
     font-family: var(--font);
-    background-color: var(--bg);
+    background-color: var(--white);
     color: var(--text);
-    display: flex;
-    justify-content: center;
-    padding-bottom: 40px;
+    min-height: 100vh;
+    padding-bottom: 60px;
 }
 
+/* Ocupa el 100% del ancho del navegador */
 .landing-page-container {
     width: 100%;
-    max-width: 540px;
-    background: var(--white);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
     min-height: 100vh;
 }
 
-/* Banner de Portada */
+/* Banner de Portada a pantalla completa */
 .hero-banner {
     width: 100%;
-    height: 180px;
+    height: 220px;
     background-color: var(--dark);
     background-size: cover;
     background-position: center;
@@ -48,116 +49,124 @@ body {
     background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
 }
 
-/* Perfil */
+/* Contenido del perfil centrado con ancho de lectura cómodo */
 .business-profile-card {
     position: relative;
-    padding: 0 24px 24px;
+    padding: 0 24px 28px;
     text-align: center;
-    margin-top: -50px;
+    margin-top: -55px;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .business-avatar {
-    width: 90px;
-    height: 90px;
+    width: 95px;
+    height: 95px;
     background: var(--white);
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 44px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
     margin-bottom: 12px;
     border: 3px solid var(--white);
     object-fit: cover;
 }
 
 .business-profile-card h1 {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 800;
     color: var(--dark);
 }
 
 .business-address {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--muted);
-    margin: 4px 0 12px;
+    margin: 6px 0 14px;
 }
 
 .business-description {
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.6;
     color: var(--text);
-    max-width: 460px;
-    margin: 0 auto 16px;
+    max-width: 560px;
+    margin: 0 auto 18px;
 }
 
 .social-links a {
     display: inline-block;
-    padding: 6px 14px;
+    padding: 8px 18px;
     background: var(--primary-light);
     color: var(--primary);
     text-decoration: none;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
 /* Galería */
 .gallery-section {
-    padding: 0 24px 24px;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px 32px;
 }
 
 .gallery-section h3 {
-    font-size: 16px;
+    font-size: 18px;
     color: var(--dark);
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
 }
 
 .gallery-grid img {
     width: 100%;
-    height: 120px;
+    height: 140px;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
-/* Sección de Reserva */
+/* Sección de Reserva a ancho completo pero contenida para legibilidad */
 .booking-section {
-    padding: 24px;
-    border-top: 8px solid var(--bg);
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    border-top: 1px solid var(--border);
 }
 
 .booking-section h2 {
-    font-size: 20px;
+    font-size: 22px;
     color: var(--dark);
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    text-align: center;
 }
 
-.step-group { margin-bottom: 24px; }
-.step-title { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 10px; }
+.step-group { margin-bottom: 28px; }
+.step-title { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 12px; }
 
 .services-list { display: flex; flex-direction: column; gap: 10px; }
-.service-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+.service-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s; }
 .service-item:hover, .service-item.selected { border-color: var(--primary); background: var(--primary-light); }
 .service-info strong { display: block; font-size: 15px; }
 .service-info span { font-size: 13px; color: var(--muted); }
-.service-price { font-weight: 700; color: var(--primary); }
+.service-price { font-weight: 700; color: var(--primary); font-size: 16px; }
 
-.date-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 15px; margin-bottom: 12px; }
-.slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.slot-btn { padding: 10px; background: var(--white); border: 1.5px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer; }
+.date-input { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 8px; font-size: 15px; margin-bottom: 14px; }
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+.slot-btn { padding: 12px; background: var(--white); border: 1.5px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer; }
 .slot-btn.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
 
-.form-field { margin-bottom: 12px; }
-.form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-.form-field input { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; }
+.form-field { margin-bottom: 14px; }
+.form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.form-field input { width: 100%; padding: 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; }
 
-.btn-confirm { width: 100%; padding: 16px; background: var(--success); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.btn-confirm { width: 100%; padding: 16px; background: var(--success); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
 .btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
 
 .hidden { display: none !important; }
