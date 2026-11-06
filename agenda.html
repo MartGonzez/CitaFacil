@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar Cita - CitaFácil</title>
+    <link rel="stylesheet" href="css/agenda.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <main class="booking-card">
+        <!-- Encabezado del Negocio -->
+        <header class="business-header" id="business-header">
+            <div class="business-logo" id="business-icon">💈</div>
+            <h1 id="business-name">Cargando negocio...</h1>
+            <p id="business-address">📍 ...</p>
+        </header>
+
+        <!-- Contenedor del Formulario de Reserva -->
+        <form id="booking-form" class="booking-steps">
+            
+            <!-- Paso 1: Selección de Servicio -->
+            <section class="step-group">
+                <span class="step-title">1. Selecciona un servicio</span>
+                <div class="services-list" id="services-container">
+                    <p class="loading-text">Buscando servicios disponibles...</p>
+                </div>
+            </section>
+
+            <!-- Paso 2: Selección de Fecha y Hora -->
+            <section class="step-group">
+                <span class="step-title">2. Elige fecha y hora</span>
+                <input type="date" id="booking-date" class="date-input" required>
+                
+                <div class="slots-grid" id="slots-container">
+                    <p class="info-text">Selecciona una fecha para ver las horas disponibles.</p>
+                </div>
+            </section>
+
+            <!-- Paso 3: Datos de Contacto -->
+            <section class="step-group">
+                <span class="step-title">3. Tus datos de contacto</span>
+                
+                <div class="form-field">
+                    <label for="client-name">Nombre y Apellido</label>
+                    <input type="text" id="client-name" placeholder="Ej: Mateo González" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="client-phone">Teléfono / WhatsApp</label>
+                    <input type="tel" id="client-phone" placeholder="+56 9 1234 5678" required>
+                </div>
+            </section>
+
+            <!-- Botón de Confirmación -->
+            <button type="submit" id="btn-submit" class="btn-confirm" disabled>
+                Confirmar Reserva
+            </button>
+        </form>
+
+        <!-- Pantalla de Éxito -->
+        <div id="success-screen" class="success-card hidden">
+            <div class="success-icon">🎉</div>
+            <h2>¡Cita Confirmada!</h2>
+            <p id="success-message">Te hemos agendado exitosamente.</p>
+            <a id="whatsapp-link" href="#" target="_blank" class="btn-whatsapp">
+                💬 Enviar Recordatorio por WhatsApp
+            </a>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/agenda.js"></script>
+</body>
+</html>
