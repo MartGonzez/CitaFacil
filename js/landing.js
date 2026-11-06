@@ -1,31 +1,21 @@
-function populateProfileForm() {
-    if (!currentTenant) return;
+import { auth } from './firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    const descEl = document.getElementById('edit-description');
-    const addressEl = document.getElementById('edit-address');
-    const phoneEl = document.getElementById('edit-phone');
-    const logoEl = document.getElementById('edit-logo');
-    const coverEl = document.getElementById('edit-cover');
-    const instaEl = document.getElementById('edit-instagram');
-    const photosEl = document.getElementById('edit-photos');
+document.addEventListener('DOMContentLoaded', () => {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("Sesión activa:", user.email);
+        }
+    });
 
-    if (descEl) descEl.value = currentTenant.description || '';
-    if (addressEl) addressEl.value = currentTenant.address || '';
-    if (phoneEl) phoneEl.value = currentTenant.phone || '';
-
-    // Si la imagen es un Base64 subido por archivo, evitamos llenar la casilla con el texto gigante
-    if (logoEl) {
-        const val = currentTenant.logoUrl || currentTenant.icon || '';
-        logoEl.value = val.startsWith('data:image') ? '📷 [Imagen de archivo subida]' : val;
-    }
-    if (coverEl) {
-        const val = currentTenant.coverUrl || '';
-        coverEl.value = val.startsWith('data:image') ? '🖼️ [Imagen de archivo subida]' : val;
-    }
-    if (instaEl) instaEl.value = currentTenant.instagram || '';
-
-    if (photosEl) {
-        const httpPhotos = (currentTenant.photos || []).filter(p => p.startsWith('http'));
-        photosEl.value = httpPhotos.join(', ');
-    }
-}
+    // Desplazamiento suave para los enlaces del menú
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+});
