@@ -1,0 +1,271 @@
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-light: #eff6ff;
+    --dark: #0f172a;
+    --text: #334155;
+    --muted: #64748b;
+    --bg: #f1f5f9;
+    --white: #ffffff;
+    --border: #cbd5e1;
+    --success: #16a34a;
+    --radius: 12px;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font);
+    background-color: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px 16px;
+}
+
+.booking-card {
+    width: 100%;
+    max-width: 460px;
+    background: var(--white);
+    border-radius: 16px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.business-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.business-logo {
+    font-size: 44px;
+    margin-bottom: 8px;
+}
+
+.business-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.business-header p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+/* Pasos */
+.step-group {
+    margin-bottom: 24px;
+}
+
+.step-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+}
+
+/* Lista de Servicios */
+.services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.service-item:hover {
+    border-color: var(--primary);
+}
+
+.service-item.selected {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+}
+
+.service-info strong {
+    display: block;
+    font-size: 15px;
+    color: var(--dark);
+}
+
+.service-info span {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.service-price {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary);
+}
+
+/* Selector de Fecha y Horarios */
+.date-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--dark);
+    margin-bottom: 14px;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.slot-btn {
+    padding: 10px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.slot-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.slot-btn.selected {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+/* Campos del Formulario */
+.form-field {
+    margin-bottom: 14px;
+}
+
+.form-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--dark);
+}
+
+.form-field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.form-field input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Botón Principal */
+.btn-confirm {
+    width: 100%;
+    padding: 16px;
+    background: var(--success);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+.btn-confirm:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.btn-confirm:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Mensajes y Pantalla de Éxito */
+.info-text, .loading-text {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    grid-column: 1 / -1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.success-card {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.success-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.success-card h2 {
+    font-size: 22px;
+    color: var(--dark);
+    margin-bottom: 8px;
+}
+
+.success-card p {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 24px;
+}
+
+.btn-whatsapp {
+    display: inline-block;
+    width: 100%;
+    padding: 14px;
+    background: #25d366;
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 700;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.btn-whatsapp:hover {
+    background: #1da851;
+}
