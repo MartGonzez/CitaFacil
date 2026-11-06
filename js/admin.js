@@ -1,4 +1,4 @@
-import { auth, db } from './firebase-config.js';
+import { auth, db, storage } from './firebase-config.js';
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
@@ -15,12 +15,16 @@ import {
     updateDoc, 
     deleteDoc 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { 
+    ref, 
+    uploadBytes, 
+    getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 let currentTenant = null;
 let isRegisterMode = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Escuchar cambios de autenticación
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             document.getElementById('auth-container').classList.add('hidden');
@@ -33,16 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Alternar entre Login y Registro
     document.getElementById('btn-toggle-auth').addEventListener('click', toggleAuthMode);
-    
-    // Formulario de Auth
     document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
-
-    // Logout
     document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
-    // Navegación por pestañas
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -53,16 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Formulario agregar servicio
     document.getElementById('add-service-form').addEventListener('submit', handleAddService);
     
-    // Formulario actualizar perfil / landing page
     const profileForm = document.getElementById('profile-config-form');
     if (profileForm) {
         profileForm.addEventListener('submit', handleUpdateProfile);
     }
 
-    // Copiar URL pública
     document.getElementById('btn-copy-url').addEventListener('click', () => {
         const input = document.getElementById('public-url-input');
         input.select();
@@ -132,7 +127,6 @@ async function handleAuthSubmit(e) {
 
 async function loadTenantProfile(uid) {
     try {
-        // CORREGIDO AQUÍ
         const tenantDoc = await getDoc(doc(db, "tenants", uid));
         if (tenantDoc.exists()) {
             currentTenant = { id: tenantDoc.id, ...tenantDoc.data() };
@@ -170,21 +164,86 @@ function populateProfileForm() {
     if (photosEl) photosEl.value = currentTenant.photos ? currentTenant.photos.join(', ') : '';
 }
 
+// Función helper para comprimir imágenes antes de subir
+function compressImage(file, maxWidth = 1080, quality = 0.8) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/jpeg', quality);
+            };
+        };
+    });
+}
+
+// Subir un archivo comprimido a Firebase Storage
+async function uploadImageFile(file, pathFolder) {
+    const compressedBlob = await compressImage(file);
+    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+    const storageRef = ref(storage, `tenants/${currentTenant.id}/${pathFolder}/${fileName}`);
+    const snapshot = await uploadBytes(storageRef, compressedBlob);
+    return await getDownloadURL(snapshot.ref);
+}
+
+// Guardar cambios del perfil (Soporta archivos y URLs)
 async function handleUpdateProfile(e) {
     e.preventDefault();
     if (!currentTenant) return;
 
-    const description = document.getElementById('edit-description').value.trim();
-    const address = document.getElementById('edit-address').value.trim();
-    const phone = document.getElementById('edit-phone').value.trim();
-    const logoUrl = document.getElementById('edit-logo').value.trim();
-    const coverUrl = document.getElementById('edit-cover').value.trim();
-    const instagram = document.getElementById('edit-instagram').value.trim();
-    const photosRaw = document.getElementById('edit-photos').value.trim();
-
-    const photos = photosRaw ? photosRaw.split(',').map(p => p.trim()).filter(p => p !== '') : [];
+    const saveBtn = document.getElementById('btn-save-profile');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Subiendo archivos y guardando...';
 
     try {
+        let logoUrl = document.getElementById('edit-logo').value.trim();
+        let coverUrl = document.getElementById('edit-cover').value.trim();
+
+        const logoFileInput = document.getElementById('upload-logo-file');
+        if (logoFileInput && logoFileInput.files.length > 0) {
+            logoUrl = await uploadImageFile(logoFileInput.files[0], "logo");
+        }
+
+        const coverFileInput = document.getElementById('upload-cover-file');
+        if (coverFileInput && coverFileInput.files.length > 0) {
+            coverUrl = await uploadImageFile(coverFileInput.files[0], "cover");
+        }
+
+        const photosRaw = document.getElementById('edit-photos').value.trim();
+        let photoUrls = photosRaw ? photosRaw.split(',').map(p => p.trim()).filter(p => p !== '') : [];
+
+        const galleryFilesInput = document.getElementById('upload-gallery-files');
+        if (galleryFilesInput && galleryFilesInput.files.length > 0) {
+            for (let i = 0; i < galleryFilesInput.files.length; i++) {
+                const uploadedUrl = await uploadImageFile(galleryFilesInput.files[i], "gallery");
+                photoUrls.push(uploadedUrl);
+            }
+        }
+
+        const description = document.getElementById('edit-description').value.trim();
+        const address = document.getElementById('edit-address').value.trim();
+        const phone = document.getElementById('edit-phone').value.trim();
+        const instagram = document.getElementById('edit-instagram').value.trim();
+
         await updateDoc(doc(db, "tenants", currentTenant.id), {
             description,
             address,
@@ -193,7 +252,7 @@ async function handleUpdateProfile(e) {
             icon: logoUrl,
             coverUrl,
             instagram,
-            photos
+            photos: photoUrls
         });
 
         currentTenant = {
@@ -205,13 +264,17 @@ async function handleUpdateProfile(e) {
             icon: logoUrl,
             coverUrl,
             instagram,
-            photos
+            photos: photoUrls
         };
 
+        populateProfileForm();
         alert("¡Los datos de tu landing page se han actualizado exitosamente!");
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
         alert("Ocurrió un error al guardar los cambios: " + error.message);
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Guardar Cambios del Perfil';
     }
 }
 
