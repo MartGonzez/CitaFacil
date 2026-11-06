@@ -13,6 +13,7 @@ let selectedService = null;
 let selectedSlot = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Obtener el slug desde la URL (query parameter ?b= o path)
     const urlParams = new URLSearchParams(window.location.search);
     let slug = urlParams.get('b');
 
@@ -25,22 +26,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!slug) slug = 'barberia-demo';
 
-    await loadTenantData(slug);
-    
+    // 2. Configurar fecha por defecto (Hoy) y fecha mínima
     const dateInput = document.getElementById('booking-date');
+    const today = new Date().toISOString().split('T')[0];
     if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
         dateInput.min = today;
+        dateInput.value = today; // Marca automáticamente la fecha actual
 
         dateInput.addEventListener('change', (e) => {
             loadAvailableSlots(e.target.value);
         });
     }
 
+    // 3. Listener del formulario
     const form = document.getElementById('booking-form');
     if (form) {
         form.addEventListener('submit', handleBookingSubmit);
     }
+
+    // 4. Cargar datos del negocio
+    await loadTenantData(slug);
 });
 
 async function loadTenantData(slug) {
@@ -112,6 +117,11 @@ async function loadTenantData(slug) {
 
         // Cargar servicios
         await loadServices(tenantDoc.id);
+
+        // Cargar automáticamente los horarios de hoy al abrir la página
+        const dateInput = document.getElementById('booking-date');
+        const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+        await loadAvailableSlots(selectedDate);
 
     } catch (error) {
         console.error("Error al cargar negocio:", error);
