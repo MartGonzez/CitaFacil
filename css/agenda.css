@@ -5,11 +5,11 @@
     --dark: #0f172a;
     --text: #334155;
     --muted: #64748b;
-    --bg-page: #f1f5f9;
+    --bg-page: #f8fafc;
     --white: #ffffff;
     --border: #e2e8f0;
     --success: #16a34a;
-    --radius-card: 24px;
+    --radius-card: 20px;
     --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -24,27 +24,28 @@ body {
     background-color: var(--bg-page);
     color: var(--text);
     min-height: 100vh;
-    padding: 30px 16px 60px;
+    padding: 40px 16px;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
 }
 
-/* Tarjeta principal centrada en escritorio */
+/* Contenedor estilo App / Card elegante para PC */
 .landing-page-container {
     width: 100%;
-    max-width: 640px;
+    max-width: 580px;
     background: var(--white);
     border-radius: var(--radius-card);
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    border: 1px solid var(--border);
     overflow: hidden;
 }
 
-/* Banner superior con degradado de reserva */
+/* Header compacto sin banner gigante deforme */
 .hero-banner {
     width: 100%;
-    height: 200px;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    height: 110px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     background-size: cover;
     background-position: center;
     position: relative;
@@ -53,102 +54,102 @@ body {
 .banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(15,23,42,0.5) 100%);
+    background: rgba(0, 0, 0, 0.15);
 }
 
-/* Perfil del negocio */
+/* Perfil principal */
 .business-profile-card {
     position: relative;
-    padding: 0 24px 28px;
+    padding: 0 24px 24px;
     text-align: center;
-    margin-top: -55px;
+    margin-top: -45px;
 }
 
+/* Avatar / Logo circular estilizado */
 .business-avatar {
-    width: 100px;
-    height: 100px;
+    width: 86px;
+    height: 86px;
     background: var(--white);
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-    margin-bottom: 14px;
-    border: 4px solid var(--white);
+    font-size: 40px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    margin-bottom: 12px;
+    border: 3.5px solid var(--white);
     object-fit: cover;
     overflow: hidden;
 }
 
 .business-profile-card h1 {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 800;
     color: var(--dark);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
 
 .business-address {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--muted);
-    margin: 6px 0 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
+    margin: 4px 0 12px;
+    font-weight: 500;
 }
 
 .business-description {
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.55;
     color: var(--text);
-    max-width: 500px;
-    margin: 0 auto 18px;
+    max-width: 480px;
+    margin: 0 auto 16px;
 }
 
+/* Botón/Pill de Instagram */
 .social-links a {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 18px;
+    padding: 7px 16px;
     background: var(--primary-light);
     color: var(--primary);
     text-decoration: none;
     border-radius: 20px;
     font-size: 13px;
     font-weight: 600;
-    transition: transform 0.2s;
+    transition: all 0.2s ease;
 }
 
 .social-links a:hover {
+    background: #dbeafe;
     transform: translateY(-1px);
 }
 
-/* Galería de fotos */
+/* Galería de fotos del local */
 .gallery-section {
-    padding: 0 24px 28px;
+    padding: 0 24px 24px;
     border-bottom: 1px solid var(--border);
 }
 
 .gallery-section h3 {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 14px;
+    color: var(--muted);
+    margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
 }
 
 .gallery-grid img {
     width: 100%;
-    height: 130px;
+    height: 110px;
     object-fit: cover;
-    border-radius: 14px;
+    border-radius: 12px;
     border: 1px solid var(--border);
     transition: transform 0.2s ease;
 }
@@ -157,21 +158,21 @@ body {
     transform: scale(1.02);
 }
 
-/* Sección de reserva */
+/* Sección de reserva de horas */
 .booking-section {
-    padding: 28px 24px;
+    padding: 24px;
 }
 
 .booking-section h2 {
-    font-size: 20px;
+    font-size: 19px;
     color: var(--dark);
-    margin-bottom: 24px;
+    margin-bottom: 22px;
     text-align: center;
     font-weight: 800;
 }
 
 .step-group { 
-    margin-bottom: 28px; 
+    margin-bottom: 24px; 
 }
 
 .step-title { 
@@ -179,25 +180,25 @@ body {
     font-size: 12px; 
     font-weight: 700; 
     text-transform: uppercase; 
-    letter-spacing: 0.6px; 
+    letter-spacing: 0.5px; 
     color: var(--muted); 
-    margin-bottom: 12px; 
+    margin-bottom: 10px; 
 }
 
-/* Servicios */
+/* Lista de Servicios (Estilo Tarjeta App) */
 .services-list { 
     display: flex; 
     flex-direction: column; 
-    gap: 12px; 
+    gap: 10px; 
 }
 
 .service-item { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    padding: 16px 20px; 
+    padding: 14px 18px; 
     border: 1.5px solid var(--border); 
-    border-radius: 14px; 
+    border-radius: 12px; 
     cursor: pointer; 
     transition: all 0.2s ease; 
     background: var(--white);
@@ -205,7 +206,7 @@ body {
 
 .service-item:hover {
     border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    background: var(--primary-light);
 }
 
 .service-item.selected { 
@@ -214,49 +215,65 @@ body {
     box-shadow: 0 0 0 1px var(--primary);
 }
 
-.service-info strong { display: block; font-size: 15px; color: var(--dark); }
-.service-info span { font-size: 13px; color: var(--muted); }
-.service-price { font-weight: 800; color: var(--primary); font-size: 16px; }
+.service-info strong { 
+    display: block; 
+    font-size: 14.5px; 
+    color: var(--dark); 
+}
 
-/* Selector de fecha */
+.service-info span { 
+    font-size: 12.5px; 
+    color: var(--muted); 
+}
+
+.service-price { 
+    font-weight: 800; 
+    color: var(--primary); 
+    font-size: 15.5px; 
+}
+
+/* Selector de Fecha */
 .date-input { 
     width: 100%; 
-    padding: 14px 16px; 
+    padding: 12px 14px; 
     border: 1.5px solid var(--border); 
-    border-radius: 12px; 
-    font-size: 15px; 
+    border-radius: 10px; 
+    font-size: 14.5px; 
     font-family: inherit;
     color: var(--dark);
-    margin-bottom: 14px; 
+    margin-bottom: 12px; 
     background-color: var(--white);
     cursor: pointer;
 }
 
-.date-input:focus { outline: none; border-color: var(--primary); }
+.date-input:focus { 
+    outline: none; 
+    border-color: var(--primary); 
+}
 
 .info-text, .loading-text {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--muted);
     text-align: left;
     grid-column: 1 / -1;
     width: 100%;
-    padding: 6px 0;
+    padding: 4px 0;
 }
 
-/* Grilla de horarios */
+/* Grilla de Horarios */
 .slots-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); 
-    gap: 10px; 
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); 
+    gap: 8px; 
     width: 100%;
 }
 
 .slot-btn { 
-    padding: 12px 14px; 
+    padding: 10px 12px; 
     background: var(--white); 
     border: 1.5px solid var(--border); 
-    border-radius: 10px; 
-    font-size: 14px; 
+    border-radius: 8px; 
+    font-size: 13.5px; 
     font-weight: 600; 
     color: var(--dark); 
     cursor: pointer; 
@@ -274,57 +291,75 @@ body {
     background: var(--primary); 
     color: var(--white); 
     border-color: var(--primary); 
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-/* Formulario */
-.form-field { margin-bottom: 16px; }
-.form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--dark); }
+/* Formulario de Contacto */
+.form-field { 
+    margin-bottom: 14px; 
+}
+
+.form-field label { 
+    display: block; 
+    font-size: 12.5px; 
+    font-weight: 600; 
+    margin-bottom: 5px; 
+    color: var(--dark);
+}
 
 .form-field input { 
     width: 100%; 
-    padding: 14px; 
+    padding: 12px 14px; 
     border: 1.5px solid var(--border); 
-    border-radius: 12px; 
-    font-size: 15px; 
+    border-radius: 10px; 
+    font-size: 14.5px; 
 }
 
-.form-field input:focus { outline: none; border-color: var(--primary); }
+.form-field input:focus { 
+    outline: none; 
+    border-color: var(--primary); 
+}
 
-/* Botón principal */
+/* Botón de Confirmación */
 .btn-confirm { 
     width: 100%; 
-    padding: 16px; 
+    padding: 15px; 
     background: var(--success); 
     color: white; 
     border: none; 
-    border-radius: 12px; 
-    font-size: 16px; 
+    border-radius: 10px; 
+    font-size: 15.5px; 
     font-weight: 700; 
     cursor: pointer; 
-    margin-top: 10px;
+    margin-top: 8px;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
 }
 
 .btn-confirm:hover:not(:disabled) { 
     background: #15803d; 
-    transform: translateY(-1px);
 }
 
 .btn-confirm:disabled { 
     background: #cbd5e1; 
     cursor: not-allowed; 
-    box-shadow: none;
 }
 
 .hidden { display: none !important; }
-.success-card { text-align: center; padding: 20px 0; }
-.success-icon { font-size: 48px; margin-bottom: 10px; }
-.btn-whatsapp { display: block; width: 100%; padding: 14px; background: #25d366; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; margin-top: 16px; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.25); }
+.success-card { text-align: center; padding: 16px 0; }
+.success-icon { font-size: 44px; margin-bottom: 8px; }
+.btn-whatsapp { 
+    display: block; 
+    width: 100%; 
+    padding: 14px; 
+    background: #25d366; 
+    color: white; 
+    border-radius: 10px; 
+    text-decoration: none; 
+    font-weight: 700; 
+    margin-top: 14px; 
+}
 
-/* Adaptación a dispositivos móviles */
-@media (max-width: 640px) {
+/* En móviles ocupa todo el espacio sin margen sobrante */
+@media (max-width: 600px) {
     body {
         padding: 0;
         background-color: var(--white);
