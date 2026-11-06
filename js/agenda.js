@@ -1,272 +1,280 @@
-:root {
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --primary-light: #eff6ff;
-    --dark: #0f172a;
-    --text: #334155;
-    --muted: #64748b;
-    --bg: #f8fafc;
-    --white: #ffffff;
-    --border: #e2e8f0;
-    --success: #16a34a;
-    --radius: 16px;
-    --font: 'Inter', system-ui, -apple-system, sans-serif;
+import { db } from './firebase-config.js';
+import { 
+    collection, 
+    query, 
+    where, 
+    getDocs, 
+    addDoc, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+let currentTenant = null;
+let selectedService = null;
+let selectedSlot = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    let slug = urlParams.get('b');
+
+    if (!slug) {
+        const pathSegments = window.location.pathname.split('/').filter(p => p);
+        if (pathSegments.length > 0 && pathSegments[0] !== 'agenda.html') {
+            slug = pathSegments[0];
+        }
+    }
+
+    if (!slug) slug = 'barberia-demo';
+
+    const dateInput = document.getElementById('booking-date');
+    const today = new Date().toISOString().split('T')[0];
+    if (dateInput) {
+        dateInput.min = today;
+        dateInput.value = today;
+
+        dateInput.addEventListener('change', (e) => {
+            loadAvailableSlots(e.target.value);
+        });
+    }
+
+    const form = document.getElementById('booking-form');
+    if (form) {
+        form.addEventListener('submit', handleBookingSubmit);
+    }
+
+    await loadTenantData(slug);
+});
+
+async function loadTenantData(slug) {
+    const nameEl = document.getElementById('business-name');
+    const addressEl = document.getElementById('business-address');
+    const descEl = document.getElementById('business-description');
+    const servicesContainer = document.getElementById('services-container');
+
+    try {
+        const q = query(collection(db, "tenants"), where("slug", "==", slug));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            nameEl.textContent = "Negocio no encontrado";
+            addressEl.textContent = "📍 Revisa el enlace ingresado";
+            servicesContainer.innerHTML = `<p class="info-text">No existe ningún negocio registrado con el slug: <strong>${slug}</strong>.</p>`;
+            return;
+        }
+
+        const tenantDoc = querySnapshot.docs[0];
+        currentTenant = { id: tenantDoc.id, ...tenantDoc.data() };
+
+        nameEl.textContent = currentTenant.name || 'Agenda de Citas';
+        addressEl.textContent = currentTenant.address ? `📍 ${currentTenant.address}` : '📍 Santiago, Chile';
+        if (descEl) {
+            descEl.textContent = currentTenant.description || 'Bienvenido a nuestra agenda online. Reserva tu hora en segundos.';
+        }
+
+        if (currentTenant.logoUrl || currentTenant.icon) {
+            const logoEl = document.getElementById('business-logo');
+            const logoSrc = currentTenant.logoUrl || currentTenant.icon;
+            if (logoSrc.startsWith('http')) {
+                logoEl.innerHTML = `<img src="${logoSrc}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            } else {
+                logoEl.textContent = logoSrc;
+            }
+        }
+
+        if (currentTenant.coverUrl) {
+            document.getElementById('hero-banner').style.backgroundImage = `url('${currentTenant.coverUrl}')`;
+        }
+
+        if (currentTenant.photos && currentTenant.photos.length > 0) {
+            const galleryGrid = document.getElementById('gallery-grid');
+            if (galleryGrid) {
+                galleryGrid.innerHTML = '';
+                currentTenant.photos.forEach(url => {
+                    if (url.trim()) {
+                        const img = document.createElement('img');
+                        img.src = url.trim();
+                        galleryGrid.appendChild(img);
+                    }
+                });
+                document.getElementById('gallery-section').classList.remove('hidden');
+            }
+        }
+
+        if (currentTenant.instagram) {
+            const socialEl = document.getElementById('social-links');
+            if (socialEl) {
+                socialEl.innerHTML = `<a href="https://instagram.com/${currentTenant.instagram}" target="_blank">📸 @${currentTenant.instagram}</a>`;
+            }
+        }
+
+        await loadServices(tenantDoc.id);
+
+        const dateInput = document.getElementById('booking-date');
+        const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+        await loadAvailableSlots(selectedDate);
+
+    } catch (error) {
+        console.error("Error al cargar negocio:", error);
+        nameEl.textContent = "Error de conexión";
+        addressEl.textContent = "📍 Error con Firebase";
+        servicesContainer.innerHTML = `<p class="info-text" style="color:red;">No se pudieron cargar los datos.</p>`;
+    }
 }
 
-* { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
+async function loadServices(tenantId) {
+    const servicesContainer = document.getElementById('services-container');
+    servicesContainer.innerHTML = '';
+
+    try {
+        const servicesSnapshot = await getDocs(collection(db, `tenants/${tenantId}/services`));
+
+        if (servicesSnapshot.empty) {
+            servicesContainer.innerHTML = `<p class="info-text">Este negocio aún no ha registrado servicios.</p>`;
+            return;
+        }
+
+        servicesSnapshot.forEach((docSnap) => {
+            const s = docSnap.data();
+            const card = document.createElement('div');
+            card.className = 'service-item';
+            card.dataset.id = docSnap.id;
+            card.innerHTML = `
+                <div class="service-info">
+                    <strong>${s.name}</strong>
+                    <span>${s.duration} min</span>
+                </div>
+                <div class="service-price">$${Number(s.price).toLocaleString('es-CL')}</div>
+            `;
+
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.service-item').forEach(el => el.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedService = { id: docSnap.id, ...s };
+                checkFormValidity();
+            });
+
+            servicesContainer.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Error cargando servicios:", error);
+    }
 }
 
-body {
-    font-family: var(--font);
-    background-color: var(--white);
-    color: var(--text);
-    min-height: 100vh;
-    padding-bottom: 60px;
+async function loadAvailableSlots(selectedDate) {
+    const slotsContainer = document.getElementById('slots-container');
+    slotsContainer.innerHTML = '<p class="loading-text">Buscando disponibilidad...</p>';
+    selectedSlot = null;
+    checkFormValidity();
+
+    if (!currentTenant) return;
+
+    const baseSlots = ["10:00", "11:00", "12:00", "15:00", "16:00", "17:00", "18:00"];
+
+    try {
+        const bookingsQ = query(
+            collection(db, `tenants/${currentTenant.id}/bookings`),
+            where("date", "==", selectedDate),
+            where("status", "==", "confirmed")
+        );
+        const bookedSnapshot = await getDocs(bookingsQ);
+        const occupiedSlots = bookedSnapshot.docs.map(doc => doc.data().time);
+
+        const freeSlots = baseSlots.filter(slot => !occupiedSlots.includes(slot));
+
+        slotsContainer.innerHTML = '';
+        if (freeSlots.length === 0) {
+            slotsContainer.innerHTML = `<p class="info-text">No hay horas disponibles para la fecha seleccionada.</p>`;
+            return;
+        }
+
+        freeSlots.forEach(time => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'slot-btn';
+            btn.textContent = time;
+
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedSlot = time;
+                checkFormValidity();
+            });
+
+            slotsContainer.appendChild(btn);
+        });
+
+    } catch (error) {
+        console.error("Error al calcular horas:", error);
+        slotsContainer.innerHTML = `<p class="info-text">Error al cargar horarios.</p>`;
+    }
 }
 
-.landing-page-container {
-    width: 100%;
-    min-height: 100vh;
+function checkFormValidity() {
+    const clientName = document.getElementById('client-name').value.trim();
+    const clientPhone = document.getElementById('client-phone').value.trim();
+    const submitBtn = document.getElementById('btn-submit');
+
+    if (selectedService && selectedSlot && clientName !== '' && clientPhone !== '') {
+        submitBtn.disabled = false;
+    } else {
+        submitBtn.disabled = true;
+    }
 }
 
-.hero-banner {
-    width: 100%;
-    height: 220px;
-    background-color: var(--dark);
-    background-size: cover;
-    background-position: center;
-    position: relative;
+['client-name', 'client-phone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', checkFormValidity);
+});
+
+async function handleBookingSubmit(e) {
+    e.preventDefault();
+
+    const clientName = document.getElementById('client-name').value.trim();
+    const clientPhone = document.getElementById('client-phone').value.trim();
+    const date = document.getElementById('booking-date').value;
+    const submitBtn = document.getElementById('btn-submit');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando reserva...';
+
+    try {
+        const bookingData = {
+            serviceId: selectedService.id,
+            serviceName: selectedService.name,
+            servicePrice: selectedService.price,
+            date: date,
+            time: selectedSlot,
+            clientName: clientName,
+            clientPhone: clientPhone,
+            status: 'confirmed',
+            createdAt: serverTimestamp()
+        };
+
+        await addDoc(collection(db, `tenants/${currentTenant.id}/bookings`), bookingData);
+
+        document.getElementById('booking-form').classList.add('hidden');
+        const successScreen = document.getElementById('success-screen');
+        successScreen.classList.remove('hidden');
+
+        document.getElementById('success-message').innerHTML = `
+            Hola <strong>${clientName}</strong>, tu cita para <strong>${selectedService.name}</strong> 
+            ha quedado agendada para el <strong>${date}</strong> a las <strong>${selectedSlot} hrs</strong>.
+        `;
+
+        const tenantPhone = currentTenant.phone || '56912345678';
+        const msg = encodeURIComponent(
+            `¡Hola! Acabo de agendar una cita mediante CitaFácil.\n\n` +
+            `👤 Cliente: ${clientName}\n` +
+            `✂️ Servicio: ${selectedService.name}\n` +
+            `📅 Fecha: ${date}\n` +
+            `⏰ Hora: ${selectedSlot} hrs`
+        );
+        document.getElementById('whatsapp-link').href = `https://wa.me/${tenantPhone}?text=${msg}`;
+
+    } catch (error) {
+        console.error("Error al guardar reserva:", error);
+        alert("Ocurrió un problema al guardar tu cita. Inténtalo nuevamente.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirmar Reserva';
+    }
 }
-
-.banner-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
-}
-
-.business-profile-card {
-    position: relative;
-    padding: 0 24px 28px;
-    text-align: center;
-    margin-top: -55px;
-    max-width: 680px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.business-avatar {
-    width: 95px;
-    height: 95px;
-    background: var(--white);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 44px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    margin-bottom: 12px;
-    border: 3px solid var(--white);
-    object-fit: cover;
-}
-
-.business-profile-card h1 {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--dark);
-}
-
-.business-address {
-    font-size: 15px;
-    color: var(--muted);
-    margin: 6px 0 14px;
-}
-
-.business-description {
-    font-size: 15px;
-    line-height: 1.6;
-    color: var(--text);
-    max-width: 560px;
-    margin: 0 auto 18px;
-}
-
-.social-links a {
-    display: inline-block;
-    padding: 8px 18px;
-    background: var(--primary-light);
-    color: var(--primary);
-    text-decoration: none;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.gallery-section {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 0 24px 32px;
-}
-
-.gallery-section h3 {
-    font-size: 18px;
-    color: var(--dark);
-    margin-bottom: 14px;
-}
-
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-}
-
-.gallery-grid img {
-    width: 100%;
-    height: 140px;
-    object-fit: cover;
-    border-radius: 12px;
-}
-
-.booking-section {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 32px 24px;
-    border-top: 1px solid var(--border);
-}
-
-.booking-section h2 {
-    font-size: 22px;
-    color: var(--dark);
-    margin-bottom: 24px;
-    text-align: center;
-}
-
-.step-group { margin-bottom: 28px; }
-
-.step-title { 
-    display: block; 
-    font-size: 13px; 
-    font-weight: 700; 
-    text-transform: uppercase; 
-    letter-spacing: 0.6px; 
-    color: var(--muted); 
-    margin-bottom: 12px; 
-}
-
-.services-list { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-}
-
-.service-item { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 16px 20px; 
-    border: 2px solid var(--border); 
-    border-radius: 12px; 
-    cursor: pointer; 
-    transition: all 0.2s ease; 
-}
-
-.service-item:hover, .service-item.selected { 
-    border-color: var(--primary); 
-    background: var(--primary-light); 
-}
-
-.service-info strong { display: block; font-size: 15px; }
-.service-info span { font-size: 13px; color: var(--muted); }
-.service-price { font-weight: 700; color: var(--primary); font-size: 16px; }
-
-.date-input { 
-    width: 100%; 
-    padding: 14px 16px; 
-    border: 1.5px solid var(--border); 
-    border-radius: 10px; 
-    font-size: 15px; 
-    font-family: inherit;
-    color: var(--dark);
-    margin-bottom: 14px; 
-    background-color: var(--white);
-    cursor: pointer;
-}
-
-.date-input:focus { outline: none; border-color: var(--primary); }
-
-.info-text, .loading-text {
-    font-size: 14px;
-    color: var(--muted);
-    text-align: left;
-    grid-column: 1 / -1;
-    width: 100%;
-    padding: 6px 0;
-}
-
-.slots-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-    gap: 10px; 
-    width: 100%;
-}
-
-.slot-btn { 
-    padding: 12px 14px; 
-    background: var(--white); 
-    border: 1.5px solid var(--border); 
-    border-radius: 10px; 
-    font-size: 14px; 
-    font-weight: 600; 
-    color: var(--dark); 
-    cursor: pointer; 
-    transition: all 0.2s ease;
-    text-align: center;
-}
-
-.slot-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background-color: var(--primary-light);
-}
-
-.slot-btn.selected { 
-    background: var(--primary); 
-    color: var(--white); 
-    border-color: var(--primary); 
-}
-
-.form-field { margin-bottom: 14px; }
-.form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-
-.form-field input { 
-    width: 100%; 
-    padding: 14px; 
-    border: 1.5px solid var(--border); 
-    border-radius: 10px; 
-    font-size: 15px; 
-}
-
-.form-field input:focus { outline: none; border-color: var(--primary); }
-
-.btn-confirm { 
-    width: 100%; 
-    padding: 16px; 
-    background: var(--success); 
-    color: white; 
-    border: none; 
-    border-radius: 10px; 
-    font-size: 16px; 
-    font-weight: 700; 
-    cursor: pointer; 
-    margin-top: 10px;
-    transition: background 0.2s;
-}
-
-.btn-confirm:hover:not(:disabled) { background: #15803d; }
-.btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-.hidden { display: none !important; }
-.success-card { text-align: center; padding: 20px 0; }
-.success-icon { font-size: 48px; margin-bottom: 10px; }
-.btn-whatsapp { display: block; width: 100%; padding: 14px; background: #25d366; color: white; border-radius: 10px; text-decoration: none; font-weight: 700; margin-top: 16px; }
