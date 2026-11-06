@@ -5,11 +5,11 @@
     --dark: #0f172a;
     --text: #334155;
     --muted: #64748b;
-    --bg: #f8fafc;
+    --bg-page: #f1f5f9;
     --white: #ffffff;
     --border: #e2e8f0;
     --success: #16a34a;
-    --radius: 16px;
+    --radius-card: 24px;
     --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -21,21 +21,30 @@
 
 body {
     font-family: var(--font);
-    background-color: var(--white);
+    background-color: var(--bg-page);
     color: var(--text);
     min-height: 100vh;
-    padding-bottom: 60px;
+    padding: 30px 16px 60px;
+    display: flex;
+    justify-content: center;
 }
 
+/* Tarjeta principal centrada en escritorio */
 .landing-page-container {
     width: 100%;
-    min-height: 100vh;
+    max-width: 640px;
+    background: var(--white);
+    border-radius: var(--radius-card);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    overflow: hidden;
 }
 
+/* Banner superior con degradado de reserva */
 .hero-banner {
     width: 100%;
-    height: 220px;
-    background-color: var(--dark);
+    height: 200px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     background-size: cover;
     background-position: center;
     position: relative;
@@ -44,109 +53,130 @@ body {
 .banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(15,23,42,0.5) 100%);
 }
 
+/* Perfil del negocio */
 .business-profile-card {
     position: relative;
     padding: 0 24px 28px;
     text-align: center;
     margin-top: -55px;
-    max-width: 680px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .business-avatar {
-    width: 95px;
-    height: 95px;
+    width: 100px;
+    height: 100px;
     background: var(--white);
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 44px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    margin-bottom: 12px;
-    border: 3px solid var(--white);
+    font-size: 48px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    margin-bottom: 14px;
+    border: 4px solid var(--white);
     object-fit: cover;
+    overflow: hidden;
 }
 
 .business-profile-card h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 800;
     color: var(--dark);
+    letter-spacing: -0.5px;
 }
 
 .business-address {
-    font-size: 15px;
+    font-size: 14px;
     color: var(--muted);
-    margin: 6px 0 14px;
+    margin: 6px 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
 }
 
 .business-description {
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.6;
     color: var(--text);
-    max-width: 560px;
+    max-width: 500px;
     margin: 0 auto 18px;
 }
 
 .social-links a {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 8px 18px;
     background: var(--primary-light);
     color: var(--primary);
     text-decoration: none;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
+    transition: transform 0.2s;
 }
 
+.social-links a:hover {
+    transform: translateY(-1px);
+}
+
+/* Galería de fotos */
 .gallery-section {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 0 24px 32px;
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
 }
 
 .gallery-section h3 {
-    font-size: 18px;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--dark);
     margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
 }
 
 .gallery-grid img {
     width: 100%;
-    height: 140px;
+    height: 130px;
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease;
 }
 
+.gallery-grid img:hover {
+    transform: scale(1.02);
+}
+
+/* Sección de reserva */
 .booking-section {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 32px 24px;
-    border-top: 1px solid var(--border);
+    padding: 28px 24px;
 }
 
 .booking-section h2 {
-    font-size: 22px;
+    font-size: 20px;
     color: var(--dark);
     margin-bottom: 24px;
     text-align: center;
+    font-weight: 800;
 }
 
-.step-group { margin-bottom: 28px; }
+.step-group { 
+    margin-bottom: 28px; 
+}
 
 .step-title { 
     display: block; 
-    font-size: 13px; 
+    font-size: 12px; 
     font-weight: 700; 
     text-transform: uppercase; 
     letter-spacing: 0.6px; 
@@ -154,10 +184,11 @@ body {
     margin-bottom: 12px; 
 }
 
+/* Servicios */
 .services-list { 
     display: flex; 
     flex-direction: column; 
-    gap: 10px; 
+    gap: 12px; 
 }
 
 .service-item { 
@@ -165,26 +196,34 @@ body {
     justify-content: space-between; 
     align-items: center; 
     padding: 16px 20px; 
-    border: 2px solid var(--border); 
-    border-radius: 12px; 
+    border: 1.5px solid var(--border); 
+    border-radius: 14px; 
     cursor: pointer; 
     transition: all 0.2s ease; 
+    background: var(--white);
 }
 
-.service-item:hover, .service-item.selected { 
+.service-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.service-item.selected { 
     border-color: var(--primary); 
     background: var(--primary-light); 
+    box-shadow: 0 0 0 1px var(--primary);
 }
 
-.service-info strong { display: block; font-size: 15px; }
+.service-info strong { display: block; font-size: 15px; color: var(--dark); }
 .service-info span { font-size: 13px; color: var(--muted); }
-.service-price { font-weight: 700; color: var(--primary); font-size: 16px; }
+.service-price { font-weight: 800; color: var(--primary); font-size: 16px; }
 
+/* Selector de fecha */
 .date-input { 
     width: 100%; 
     padding: 14px 16px; 
     border: 1.5px solid var(--border); 
-    border-radius: 10px; 
+    border-radius: 12px; 
     font-size: 15px; 
     font-family: inherit;
     color: var(--dark);
@@ -204,9 +243,10 @@ body {
     padding: 6px 0;
 }
 
+/* Grilla de horarios */
 .slots-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); 
     gap: 10px; 
     width: 100%;
 }
@@ -234,39 +274,64 @@ body {
     background: var(--primary); 
     color: var(--white); 
     border-color: var(--primary); 
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.form-field { margin-bottom: 14px; }
-.form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+/* Formulario */
+.form-field { margin-bottom: 16px; }
+.form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--dark); }
 
 .form-field input { 
     width: 100%; 
     padding: 14px; 
     border: 1.5px solid var(--border); 
-    border-radius: 10px; 
+    border-radius: 12px; 
     font-size: 15px; 
 }
 
 .form-field input:focus { outline: none; border-color: var(--primary); }
 
+/* Botón principal */
 .btn-confirm { 
     width: 100%; 
     padding: 16px; 
     background: var(--success); 
     color: white; 
     border: none; 
-    border-radius: 10px; 
+    border-radius: 12px; 
     font-size: 16px; 
     font-weight: 700; 
     cursor: pointer; 
     margin-top: 10px;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
 }
 
-.btn-confirm:hover:not(:disabled) { background: #15803d; }
-.btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
+.btn-confirm:hover:not(:disabled) { 
+    background: #15803d; 
+    transform: translateY(-1px);
+}
+
+.btn-confirm:disabled { 
+    background: #cbd5e1; 
+    cursor: not-allowed; 
+    box-shadow: none;
+}
 
 .hidden { display: none !important; }
 .success-card { text-align: center; padding: 20px 0; }
 .success-icon { font-size: 48px; margin-bottom: 10px; }
-.btn-whatsapp { display: block; width: 100%; padding: 14px; background: #25d366; color: white; border-radius: 10px; text-decoration: none; font-weight: 700; margin-top: 16px; }
+.btn-whatsapp { display: block; width: 100%; padding: 14px; background: #25d366; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; margin-top: 16px; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.25); }
+
+/* Adaptación a dispositivos móviles */
+@media (max-width: 640px) {
+    body {
+        padding: 0;
+        background-color: var(--white);
+    }
+    .landing-page-container {
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+    }
+}
