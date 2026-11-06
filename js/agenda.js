@@ -70,10 +70,11 @@ async function loadTenantData(slug) {
             descEl.textContent = currentTenant.description || 'Bienvenido a nuestra agenda online. Reserva tu hora en segundos.';
         }
 
+        // Renderizar Logo (Soporta HTTP, HTTPS y Base64 data:image)
         if (currentTenant.logoUrl || currentTenant.icon) {
             const logoEl = document.getElementById('business-logo');
             const logoSrc = currentTenant.logoUrl || currentTenant.icon;
-            if (logoSrc.startsWith('http')) {
+            if (logoSrc.startsWith('http') || logoSrc.startsWith('data:image')) {
                 logoEl.innerHTML = `<img src="${logoSrc}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
             } else {
                 logoEl.textContent = logoSrc;
