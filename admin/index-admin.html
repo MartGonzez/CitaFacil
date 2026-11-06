@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - CitaFácil</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- PANTALLA 1: AUTENTICACIÓN (LOGIN Y REGISTRO) -->
+    <div id="auth-container" class="auth-box">
+        <div class="auth-header">
+            <span class="logo-icon">📅</span>
+            <h2>CitaFácil Admin</h2>
+            <p id="auth-subtitle">Ingresa a tu panel de control</p>
+        </div>
+
+        <form id="auth-form">
+            <div class="form-field" id="field-business-name" style="display: none;">
+                <label for="reg-business-name">Nombre de tu Negocio</label>
+                <input type="text" id="reg-business-name" placeholder="Ej: Barbería El Sol">
+            </div>
+
+            <div class="form-field" id="field-slug" style="display: none;">
+                <label for="reg-slug">Enlace deseado (citafacil.cl/tu-slug)</label>
+                <input type="text" id="reg-slug" placeholder="ej: barberia-el-sol">
+            </div>
+
+            <div class="form-field">
+                <label for="auth-email">Correo Electrónico</label>
+                <input type="email" id="auth-email" placeholder="contacto@tunegocio.cl" required>
+            </div>
+
+            <div class="form-field">
+                <label for="auth-password">Contraseña</label>
+                <input type="password" id="auth-password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" id="btn-auth-submit" class="btn-primary">Iniciar Sesión</button>
+        </form>
+
+        <div class="auth-toggle">
+            <span id="toggle-text">¿No tienes cuenta?</span>
+            <button type="button" id="btn-toggle-auth" class="btn-link">Registrar mi negocio</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: DASHBOARD DE ADMINISTRACIÓN -->
+    <div id="dashboard-container" class="dashboard-layout hidden">
+        
+        <!-- Sidebar Navbar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span>📅</span> <strong>CitaFácil</strong>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
+                <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
+                <button class="nav-item" data-tab="tab-settings">⚙️ Mi Enlace Público</button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span id="user-email-display">usuario@negocio.cl</span>
+                <button id="btn-logout" class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- TAB 1: CITAS AGENDADAS -->
+            <section id="tab-bookings" class="tab-pane active">
+                <header class="content-header">
+                    <div>
+                        <h2>Citas Agendadas</h2>
+                        <p>Revisa las reservas confirmadas por tus clientes.</p>
+                    </div>
+                </header>
+
+                <div class="filters-bar">
+                    <label for="filter-date">Filtrar por Fecha:</label>
+                    <input type="date" id="filter-date" class="date-picker-admin">
+                </div>
+
+                <div id="bookings-list" class="bookings-grid">
+                    <p class="loading-text">Cargando reservas...</p>
+                </div>
+            </section>
+
+            <!-- TAB 2: GESTIÓN DE SERVICIOS -->
+            <section id="tab-services" class="tab-pane">
+                <header class="content-header">
+                    <div>
+                        <h2>Servicios y Precios</h2>
+                        <p>Agrega o elimina los servicios que ofreces a tus clientes.</p>
+                    </div>
+                </header>
+
+                <form id="add-service-form" class="service-form-card">
+                    <h3>Agregar Nuevo Servicio</h3>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="service-name">Nombre del Servicio</label>
+                            <input type="text" id="service-name" placeholder="Ej: Perfilado de Barba" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="service-price">Precio (CLP)</label>
+                            <input type="number" id="service-price" placeholder="8000" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="service-duration">Duración (minutos)</label>
+                            <input type="number" id="service-duration" placeholder="30" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Guardar Servicio</button>
+                </form>
+
+                <div id="services-list-admin" class="services-admin-grid">
+                    <p class="loading-text">Cargando servicios...</p>
+                </div>
+            </section>
+
+            <!-- TAB 3: CONFIGURACIÓN -->
+            <section id="tab-settings" class="tab-pane">
+                <header class="content-header">
+                    <div>
+                        <h2>Mi Enlace Público</h2>
+                        <p>Comparte este link con tus clientes para que agenden directamente.</p>
+                    </div>
+                </header>
+
+                <div class="link-share-card">
+                    <h3>Tu Enlace de Agendamiento:</h3>
+                    <div class="url-copy-box">
+                        <input type="text" id="public-url-input" readonly>
+                        <button id="btn-copy-url" class="btn-secondary">Copiar Link</button>
+                    </div>
+                    <a id="btn-visit-public" href="#" target="_blank" class="btn-outline-primary">Ver Agenda Pública ↗</a>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="../js/firebase-config.js"></script>
+    <script type="module" src="../js/admin.js"></script>
+</body>
+</html>
