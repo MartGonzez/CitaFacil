@@ -1,11 +1,11 @@
 :root {
     --primary: #059669;          /* Verde esmeralda */
-    --primary-hover: #047857;    /* Verde oscuro al interactuar */
-    --primary-light: #ecfdf5;    /* Verde mente suave */
-    --dark: #064e3b;             /* Verde bosque muy oscuro para títulos */
+    --primary-hover: #047857;
+    --primary-light: #ecfdf5;
+    --dark: #064e3b;
     --text: #334155;
     --muted: #64748b;
-    --bg-page: #f4fbf7;          /* Fondo menta ultra suave */
+    --bg-page: #f4fbf7;
     --white: #ffffff;
     --border: #e2e8f0;
     --success: #059669;
@@ -13,11 +13,7 @@
     --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-* { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: var(--font);
@@ -30,22 +26,20 @@ body {
     align-items: flex-start;
 }
 
-/* Contenedor estilo App / Card elegante para PC */
 .landing-page-container {
     width: 100%;
     max-width: 580px;
     background: var(--white);
     border-radius: var(--radius-card);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 10px 30px rgba(6, 78, 59, 0.05);
     border: 1px solid var(--border);
     overflow: hidden;
 }
 
-/* Header compacto sin banner gigante deforme */
 .hero-banner {
     width: 100%;
     height: 110px;
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
     background-size: cover;
     background-position: center;
     position: relative;
@@ -57,7 +51,6 @@ body {
     background: rgba(0, 0, 0, 0.15);
 }
 
-/* Perfil principal */
 .business-profile-card {
     position: relative;
     padding: 0 24px 24px;
@@ -65,7 +58,6 @@ body {
     margin-top: -45px;
 }
 
-/* Avatar / Logo circular estilizado */
 .business-avatar {
     width: 86px;
     height: 86px;
@@ -104,7 +96,6 @@ body {
     margin: 0 auto 16px;
 }
 
-/* Botón/Pill de Instagram */
 .social-links a {
     display: inline-flex;
     align-items: center;
@@ -120,11 +111,10 @@ body {
 }
 
 .social-links a:hover {
-    background: #dbeafe;
+    background: #d1fae5;
     transform: translateY(-1px);
 }
 
-/* Galería de fotos del local */
 .gallery-section {
     padding: 0 24px 24px;
     border-bottom: 1px solid var(--border);
@@ -154,14 +144,9 @@ body {
     transition: transform 0.2s ease;
 }
 
-.gallery-grid img:hover {
-    transform: scale(1.02);
-}
+.gallery-grid img:hover { transform: scale(1.02); }
 
-/* Sección de reserva de horas */
-.booking-section {
-    padding: 24px;
-}
+.booking-section { padding: 24px; }
 
 .booking-section h2 {
     font-size: 19px;
@@ -171,36 +156,29 @@ body {
     font-weight: 800;
 }
 
-.step-group { 
-    margin-bottom: 24px; 
+.step-group { margin-bottom: 24px; }
+
+.step-title {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
 }
 
-.step-title { 
-    display: block; 
-    font-size: 12px; 
-    font-weight: 700; 
-    text-transform: uppercase; 
-    letter-spacing: 0.5px; 
-    color: var(--muted); 
-    margin-bottom: 10px; 
-}
+.services-list { display: flex; flex-direction: column; gap: 10px; }
 
-/* Lista de Servicios (Estilo Tarjeta App) */
-.services-list { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-}
-
-.service-item { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 14px 18px; 
-    border: 1.5px solid var(--border); 
-    border-radius: 12px; 
-    cursor: pointer; 
-    transition: all 0.2s ease; 
+.service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
     background: var(--white);
 }
 
@@ -209,47 +187,30 @@ body {
     background: var(--primary-light);
 }
 
-.service-item.selected { 
-    border-color: var(--primary); 
-    background: var(--primary-light); 
+.service-item.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
     box-shadow: 0 0 0 1px var(--primary);
 }
 
-.service-info strong { 
-    display: block; 
-    font-size: 14.5px; 
-    color: var(--dark); 
-}
+.service-info strong { display: block; font-size: 14.5px; color: var(--dark); }
+.service-info span { font-size: 12.5px; color: var(--muted); }
+.service-price { font-weight: 800; color: var(--primary); font-size: 15.5px; }
 
-.service-info span { 
-    font-size: 12.5px; 
-    color: var(--muted); 
-}
-
-.service-price { 
-    font-weight: 800; 
-    color: var(--primary); 
-    font-size: 15.5px; 
-}
-
-/* Selector de Fecha */
-.date-input { 
-    width: 100%; 
-    padding: 12px 14px; 
-    border: 1.5px solid var(--border); 
-    border-radius: 10px; 
-    font-size: 14.5px; 
+.date-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14.5px;
     font-family: inherit;
     color: var(--dark);
-    margin-bottom: 12px; 
+    margin-bottom: 12px;
     background-color: var(--white);
     cursor: pointer;
 }
 
-.date-input:focus { 
-    outline: none; 
-    border-color: var(--primary); 
-}
+.date-input:focus { outline: none; border-color: var(--primary); }
 
 .info-text, .loading-text {
     font-size: 13.5px;
@@ -260,23 +221,22 @@ body {
     padding: 4px 0;
 }
 
-/* Grilla de Horarios */
-.slots-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); 
-    gap: 8px; 
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
     width: 100%;
 }
 
-.slot-btn { 
-    padding: 10px 12px; 
-    background: var(--white); 
-    border: 1.5px solid var(--border); 
-    border-radius: 8px; 
-    font-size: 13.5px; 
-    font-weight: 600; 
-    color: var(--dark); 
-    cursor: pointer; 
+.slot-btn {
+    padding: 10px 12px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--dark);
+    cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
 }
@@ -287,86 +247,59 @@ body {
     background-color: var(--primary-light);
 }
 
-.slot-btn.selected { 
-    background: var(--primary); 
-    color: var(--white); 
-    border-color: var(--primary); 
+.slot-btn.selected {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
 }
 
-/* Formulario de Contacto */
-.form-field { 
-    margin-bottom: 14px; 
+.form-field { margin-bottom: 14px; }
+.form-field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 5px; color: var(--dark); }
+
+.form-field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14.5px;
 }
 
-.form-field label { 
-    display: block; 
-    font-size: 12.5px; 
-    font-weight: 600; 
-    margin-bottom: 5px; 
-    color: var(--dark);
-}
+.form-field input:focus { outline: none; border-color: var(--primary); }
 
-.form-field input { 
-    width: 100%; 
-    padding: 12px 14px; 
-    border: 1.5px solid var(--border); 
-    border-radius: 10px; 
-    font-size: 14.5px; 
-}
-
-.form-field input:focus { 
-    outline: none; 
-    border-color: var(--primary); 
-}
-
-/* Botón de Confirmación */
-.btn-confirm { 
-    width: 100%; 
-    padding: 15px; 
-    background: var(--success); 
-    color: white; 
-    border: none; 
-    border-radius: 10px; 
-    font-size: 15.5px; 
-    font-weight: 700; 
-    cursor: pointer; 
+.btn-confirm {
+    width: 100%;
+    padding: 15px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15.5px;
+    font-weight: 700;
+    cursor: pointer;
     margin-top: 8px;
     transition: all 0.2s ease;
 }
 
-.btn-confirm:hover:not(:disabled) { 
-    background: #15803d; 
-}
-
-.btn-confirm:disabled { 
-    background: #cbd5e1; 
-    cursor: not-allowed; 
-}
+.btn-confirm:hover:not(:disabled) { background: var(--primary-hover); }
+.btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
 
 .hidden { display: none !important; }
 .success-card { text-align: center; padding: 16px 0; }
 .success-icon { font-size: 44px; margin-bottom: 8px; }
-.btn-whatsapp { 
-    display: block; 
-    width: 100%; 
-    padding: 14px; 
-    background: #25d366; 
-    color: white; 
-    border-radius: 10px; 
-    text-decoration: none; 
-    font-weight: 700; 
-    margin-top: 14px; 
+
+.btn-whatsapp {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: #25d366;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    margin-top: 14px;
 }
 
-/* En móviles ocupa todo el espacio sin margen sobrante */
 @media (max-width: 600px) {
-    body {
-        padding: 0;
-        background-color: var(--white);
-    }
-    .landing-page-container {
-        border-radius: 0;
-        border: none;
-        box-shadow: none;
-    }
+    body { padding: 0; background-color: var(--white); }
+    .landing-page-container { border-radius: 0; border: none; box-shadow: none; }
 }
