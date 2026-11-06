@@ -61,7 +61,7 @@
             <nav class="sidebar-menu">
                 <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
                 <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
-                <button class="nav-item" data-tab="tab-settings">⚙️ Mi Enlace Público</button>
+                <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Landing Page</button>
             </nav>
 
             <div class="sidebar-footer">
@@ -125,16 +125,17 @@
                 </div>
             </section>
 
-            <!-- TAB 3: CONFIGURACIÓN -->
+            <!-- TAB 3: CONFIGURACIÓN DE LANDING PAGE Y PERFIL -->
             <section id="tab-settings" class="tab-pane">
                 <header class="content-header">
                     <div>
-                        <h2>Mi Enlace Público</h2>
-                        <p>Comparte este link con tus clientes para que agenden directamente.</p>
+                        <h2>Mi Perfil y Enlace Público</h2>
+                        <p>Personaliza cómo se ve tu negocio para tus clientes y obtén tu link de agendamiento.</p>
                     </div>
                 </header>
 
-                <div class="link-share-card">
+                <!-- Tarjeta del Enlace -->
+                <div class="link-share-card" style="margin-bottom: 24px;">
                     <h3>Tu Enlace de Agendamiento:</h3>
                     <div class="url-copy-box">
                         <input type="text" id="public-url-input" readonly>
@@ -142,6 +143,52 @@
                     </div>
                     <a id="btn-visit-public" href="#" target="_blank" class="btn-outline-primary">Ver Agenda Pública ↗</a>
                 </div>
+
+                <!-- Formulario de Personalización de Landing Page -->
+                <form id="profile-config-form" class="service-form-card">
+                    <h3>Personalizar Mi Landing Page</h3>
+                    
+                    <div class="form-field">
+                        <label for="edit-description">Descripción del Negocio</label>
+                        <textarea id="edit-description" rows="3" class="form-field-input" style="width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit;" placeholder="Contamos con 10 años de experiencia ofreciendo la mejor atención..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="edit-address">Dirección Física</label>
+                            <input type="text" id="edit-address" placeholder="Ej: Av. Providencia 1234, Local 5">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-phone">Teléfono / WhatsApp de Atención</label>
+                            <input type="text" id="edit-phone" placeholder="56912345678">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="edit-logo">Icono o URL del Logo</label>
+                            <input type="text" id="edit-logo" placeholder="💈 o https://mi-imagen.com/logo.jpg">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-cover">URL Imagen de Banner (Portada)</label>
+                            <input type="url" id="edit-cover" placeholder="https://mi-imagen.com/banner.jpg">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="edit-instagram">Usuario de Instagram (sin @)</label>
+                            <input type="text" id="edit-instagram" placeholder="mi_barberia">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-photos">Fotos del Local (URLs separadas por comas)</label>
+                            <input type="text" id="edit-photos" placeholder="https://foto1.jpg, https://foto2.jpg">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Guardar Cambios del Perfil</button>
+                </form>
+
             </section>
 
         </main>
