@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendar Cita - CitaFácil</title>
+    <title>Reserva tu hora - CitaFácil</title>
     <link rel="stylesheet" href="css/agenda.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,68 +11,79 @@
 </head>
 <body>
 
-    <main class="booking-card">
-        <!-- Encabezado del Negocio -->
-        <header class="business-header" id="business-header">
-            <div class="business-logo" id="business-icon">💈</div>
-            <h1 id="business-name">Cargando negocio...</h1>
-            <p id="business-address">📍 ...</p>
+    <main class="landing-page-container">
+        <!-- Banner Superior -->
+        <header class="hero-banner" id="hero-banner">
+            <div class="banner-overlay"></div>
         </header>
 
-        <!-- Contenedor del Formulario de Reserva -->
-        <form id="booking-form" class="booking-steps">
+        <!-- Perfil del Negocio -->
+        <section class="business-profile-card">
+            <div class="business-avatar" id="business-logo">💈</div>
+            <h1 id="business-name">Cargando negocio...</h1>
+            <p class="business-address" id="business-address">📍 ...</p>
+            <p class="business-description" id="business-description">...</p>
             
-            <!-- Paso 1: Selección de Servicio -->
-            <section class="step-group">
-                <span class="step-title">1. Selecciona un servicio</span>
-                <div class="services-list" id="services-container">
-                    <p class="loading-text">Buscando servicios disponibles...</p>
-                </div>
-            </section>
+            <div class="social-links" id="social-links"></div>
+        </section>
 
-            <!-- Paso 2: Selección de Fecha y Hora -->
-            <section class="step-group">
-                <span class="step-title">2. Elige fecha y hora</span>
-                <input type="date" id="booking-date" class="date-input" required>
-                
-                <div class="slots-grid" id="slots-container">
-                    <p class="info-text">Selecciona una fecha para ver las horas disponibles.</p>
-                </div>
-            </section>
+        <!-- Galería de Fotos del Local -->
+        <section class="gallery-section hidden" id="gallery-section">
+            <h3>Conoce nuestro espacio</h3>
+            <div class="gallery-grid" id="gallery-grid"></div>
+        </section>
 
-            <!-- Paso 3: Datos de Contacto -->
-            <section class="step-group">
-                <span class="step-title">3. Tus datos de contacto</span>
-                
-                <div class="form-field">
-                    <label for="client-name">Nombre y Apellido</label>
-                    <input type="text" id="client-name" placeholder="Ej: Mateo González" required>
+        <!-- Bloque de Agendamiento -->
+        <section class="booking-section">
+            <h2>📅 Agenda tu Cita</h2>
+
+            <form id="booking-form" class="booking-steps">
+                <!-- Paso 1: Servicios -->
+                <div class="step-group">
+                    <span class="step-title">1. Selecciona un servicio</span>
+                    <div class="services-list" id="services-container">
+                        <p class="loading-text">Buscando servicios...</p>
+                    </div>
                 </div>
 
-                <div class="form-field">
-                    <label for="client-phone">Teléfono / WhatsApp</label>
-                    <input type="tel" id="client-phone" placeholder="+56 9 1234 5678" required>
+                <!-- Paso 2: Fecha y Hora -->
+                <div class="step-group">
+                    <span class="step-title">2. Elige fecha y hora</span>
+                    <input type="date" id="booking-date" class="date-input" required>
+                    <div class="slots-grid" id="slots-container">
+                        <p class="info-text">Selecciona una fecha para ver horas disponibles.</p>
+                    </div>
                 </div>
-            </section>
 
-            <!-- Botón de Confirmación -->
-            <button type="submit" id="btn-submit" class="btn-confirm" disabled>
-                Confirmar Reserva
-            </button>
-        </form>
+                <!-- Paso 3: Tus Datos -->
+                <div class="step-group">
+                    <span class="step-title">3. Tus datos</span>
+                    <div class="form-field">
+                        <label for="client-name">Nombre completo</label>
+                        <input type="text" id="client-name" placeholder="Ej: Mateo González" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="client-phone">Teléfono (WhatsApp)</label>
+                        <input type="tel" id="client-phone" placeholder="+56 9 1234 5678" required>
+                    </div>
+                </div>
 
-        <!-- Pantalla de Éxito -->
-        <div id="success-screen" class="success-card hidden">
-            <div class="success-icon">🎉</div>
-            <h2>¡Cita Confirmada!</h2>
-            <p id="success-message">Te hemos agendado exitosamente.</p>
-            <a id="whatsapp-link" href="#" target="_blank" class="btn-whatsapp">
-                💬 Enviar Recordatorio por WhatsApp
-            </a>
-        </div>
+                <button type="submit" id="btn-submit" class="btn-confirm" disabled>
+                    Confirmar Cita
+                </button>
+            </form>
+
+            <div id="success-screen" class="success-card hidden">
+                <div class="success-icon">🎉</div>
+                <h2>¡Cita Confirmada!</h2>
+                <p id="success-message"></p>
+                <a id="whatsapp-link" href="#" target="_blank" class="btn-whatsapp">
+                    💬 Notificar al Negocio por WhatsApp
+                </a>
+            </div>
+        </section>
     </main>
 
-    <!-- Scripts -->
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/agenda.js"></script>
 </body>
