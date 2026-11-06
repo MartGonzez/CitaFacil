@@ -5,7 +5,6 @@ import {
     where, 
     getDocs, 
     addDoc, 
-    timestamp, 
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -30,32 +29,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Slug por defecto para pruebas locales si no hay parámetro
     if (!slug) slug = 'barberia-demo';
 
+    console.log("Cargando slug:", slug);
+
     // 2. Cargar datos del negocio desde Firestore
     await loadTenantData(slug);
     
     // 3. Establecer fecha mínima en el DatePicker (Hoy)
     const dateInput = document.getElementById('booking-date');
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.min = today;
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
 
-    // Listener para cambio de fecha
-    dateInput.addEventListener('change', (e) => {
-        loadAvailableSlots(e.target.value);
-    });
+        dateInput.addEventListener('change', (e) => {
+            loadAvailableSlots(e.target.value);
+        });
+    }
 
     // Listener del formulario
-    document.getElementById('booking-form').addEventListener('submit', handleBookingSubmit);
+    const form = document.getElementById('booking-form');
+    if (form) {
+        form.addEventListener('submit', handleBookingSubmit);
+    }
 });
 
 // Obtener datos del negocio y sus servicios
 async function loadTenantData(slug) {
+    const nameEl = document.getElementById('business-name');
+    const addressEl = document.getElementById('business-address');
+    const servicesContainer = document.getElementById('services-container');
+
     try {
         const q = query(collection(db, "tenants"), where("slug", "==", slug));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            document.getElementById('business-name').textContent = "Negocio no encontrado";
-            document.getElementById('services-container').innerHTML = `<p class="info-text">El enlace provisto no corresponde a una agenda activa.</p>`;
+            nameEl.textContent = "Negocio no encontrado";
+            addressEl.textContent = "📍 Revisa el enlace ingresado";
+            servicesContainer.innerHTML = `<p class="info-text">No existe ningún negocio registrado con el slug: <strong>${slug}</strong>.</p>`;
             return;
         }
 
@@ -63,8 +73,8 @@ async function loadTenantData(slug) {
         currentTenant = { id: tenantDoc.id, ...tenantDoc.data() };
 
         // Renderizar header
-        document.getElementById('business-name').textContent = currentTenant.name || 'Agenda de Citas';
-        document.getElementById('business-address').textContent = currentTenant.address || '📍 Santiago, Chile';
+        nameEl.textContent = currentTenant.name || 'Agenda de Citas';
+        addressEl.textContent = currentTenant.address || '📍 Santiago, Chile';
         if (currentTenant.icon) {
             document.getElementById('business-icon').textContent = currentTenant.icon;
         }
@@ -73,7 +83,14 @@ async function loadTenantData(slug) {
         await loadServices(tenantDoc.id);
 
     } catch (error) {
-        console.error("Error al cargar negocio:", error);
+        console.error("Error crítico al cargar negocio:", error);
+        nameEl.textContent = "Error de conexión con Firebase";
+        addressEl.textContent = "📍 Revisa las credenciales en js/firebase-config.js";
+        servicesContainer.innerHTML = `
+            <div style="color: #ef4444; font-size: 13px; text-align: center; padding: 10px; background: #fee2e2; border-radius: 8px;">
+                <strong>Detalle del error:</strong><br>${error.message}
+            </div>
+        `;
     }
 }
 
@@ -86,7 +103,7 @@ async function loadServices(tenantId) {
         const servicesSnapshot = await getDocs(collection(db, `tenants/${tenantId}/services`));
 
         if (servicesSnapshot.empty) {
-            servicesContainer.innerHTML = `<p class="info-text">Este negocio aún no ha configurado sus servicios.</p>`;
+            servicesContainer.innerHTML = `<p class="info-text">Este negocio aún no ha registrado servicios en el panel admin.</p>`;
             return;
         }
 
@@ -115,21 +132,22 @@ async function loadServices(tenantId) {
 
     } catch (error) {
         console.error("Error cargando servicios:", error);
+        servicesContainer.innerHTML = `<p class="info-text" style="color:red;">Error al cargar la lista de servicios.</p>`;
     }
 }
 
-// Generar o filtrar bloques horarios disponibles para la fecha elegida
+// Generar o filtrar bloques horarios disponibles
 async function loadAvailableSlots(selectedDate) {
     const slotsContainer = document.getElementById('slots-container');
     slotsContainer.innerHTML = '<p class="loading-text">Buscando disponibilidad...</p>';
     selectedSlot = null;
     checkFormValidity();
 
-    // Horarios estandar de atención (se pueden parametrizar por tenant)
+    if (!currentTenant) return;
+
     const baseSlots = ["10:00", "11:00", "12:00", "15:00", "16:00", "17:00", "18:00"];
 
     try {
-        // Consultar reservas existentes para esa fecha y descartar horas ocupadas
         const bookingsQ = query(
             collection(db, `tenants/${currentTenant.id}/bookings`),
             where("date", "==", selectedDate),
@@ -168,7 +186,7 @@ async function loadAvailableSlots(selectedDate) {
     }
 }
 
-// Habilitar o deshabilitar botón de confirmación
+// Validar estado del formulario
 function checkFormValidity() {
     const clientName = document.getElementById('client-name').value.trim();
     const clientPhone = document.getElementById('client-phone').value.trim();
@@ -181,12 +199,12 @@ function checkFormValidity() {
     }
 }
 
-// Escuchar tipeo en los campos para refrescar el estado del botón
 ['client-name', 'client-phone'].forEach(id => {
-    document.getElementById(id).addEventListener('input', checkFormValidity);
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', checkFormValidity);
 });
 
-// Guardar reserva en Firestore
+// Guardar reserva
 async function handleBookingSubmit(e) {
     e.preventDefault();
 
@@ -213,7 +231,6 @@ async function handleBookingSubmit(e) {
 
         await addDoc(collection(db, `tenants/${currentTenant.id}/bookings`), bookingData);
 
-        // Ocultar formulario y mostrar confirmación
         document.getElementById('booking-form').classList.add('hidden');
         const successScreen = document.getElementById('success-screen');
         successScreen.classList.remove('hidden');
@@ -223,7 +240,6 @@ async function handleBookingSubmit(e) {
             ha quedado agendada para el <strong>${date}</strong> a las <strong>${selectedSlot} hrs</strong>.
         `;
 
-        // Crear enlace de WhatsApp para notificar al negocio
         const tenantPhone = currentTenant.phone || '56912345678';
         const msg = encodeURIComponent(
             `¡Hola! Acabo de agendar una cita mediante CitaFácil.\n\n` +
