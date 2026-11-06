@@ -13,9 +13,7 @@ import {
     setDoc, 
     addDoc, 
     updateDoc, 
-    deleteDoc, 
-    query, 
-    where 
+    deleteDoc 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 let currentTenant = null;
@@ -35,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Toggle entre Iniciar Sesión y Registro
+    // Alternar entre Login y Registro
     document.getElementById('btn-toggle-auth').addEventListener('click', toggleAuthMode);
     
     // Formulario de Auth
@@ -46,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Navegación por pestañas
     document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', () => {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             
@@ -73,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Alternar entre Login y Registro
 function toggleAuthMode() {
     isRegisterMode = !isRegisterMode;
     const subtitle = document.getElementById('auth-subtitle');
@@ -97,7 +94,6 @@ function toggleAuthMode() {
     }
 }
 
-// Enviar login / registro
 async function handleAuthSubmit(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value.trim();
@@ -116,7 +112,6 @@ async function handleAuthSubmit(e) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const uid = userCredential.user.uid;
 
-            // Crear documento de tenant
             await setDoc(doc(db, "tenants", uid), {
                 ownerUid: uid,
                 name: businessName,
@@ -135,22 +130,18 @@ async function handleAuthSubmit(e) {
     }
 }
 
-// Cargar perfil del negocio autenticado
 async function loadTenantProfile(uid) {
     try {
-        const tenantDoc = await getDoc(doc(doc(db, "tenants", uid).path));
+        // CORREGIDO AQUÍ
+        const tenantDoc = await getDoc(doc(db, "tenants", uid));
         if (tenantDoc.exists()) {
             currentTenant = { id: tenantDoc.id, ...tenantDoc.data() };
             
-            // Configurar URL pública
             const publicUrl = `${window.location.origin}/${currentTenant.slug}`;
             document.getElementById('public-url-input').value = publicUrl;
             document.getElementById('btn-visit-public').href = `../agenda.html?b=${currentTenant.slug}`;
 
-            // Precargar datos en el formulario de la Landing Page
             populateProfileForm();
-
-            // Cargar datos del dashboard
             await loadBookings();
             await loadServicesAdmin();
         }
@@ -159,7 +150,6 @@ async function loadTenantProfile(uid) {
     }
 }
 
-// Precargar campos del formulario de la Landing Page
 function populateProfileForm() {
     if (!currentTenant) return;
 
@@ -180,7 +170,6 @@ function populateProfileForm() {
     if (photosEl) photosEl.value = currentTenant.photos ? currentTenant.photos.join(', ') : '';
 }
 
-// Guardar cambios del perfil / landing page en Firestore
 async function handleUpdateProfile(e) {
     e.preventDefault();
     if (!currentTenant) return;
@@ -207,7 +196,6 @@ async function handleUpdateProfile(e) {
             photos
         });
 
-        // Actualizar datos locales
         currentTenant = {
             ...currentTenant,
             description,
@@ -227,7 +215,6 @@ async function handleUpdateProfile(e) {
     }
 }
 
-// Cargar citas agendadas
 async function loadBookings() {
     const listContainer = document.getElementById('bookings-list');
     listContainer.innerHTML = '';
@@ -260,7 +247,6 @@ async function loadBookings() {
     }
 }
 
-// Cargar servicios en el panel
 async function loadServicesAdmin() {
     const container = document.getElementById('services-list-admin');
     container.innerHTML = '';
@@ -296,7 +282,6 @@ async function loadServicesAdmin() {
     }
 }
 
-// Agregar servicio
 async function handleAddService(e) {
     e.preventDefault();
     const name = document.getElementById('service-name').value.trim();
