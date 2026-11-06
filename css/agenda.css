@@ -27,13 +27,11 @@ body {
     padding-bottom: 60px;
 }
 
-/* Ocupa el 100% del ancho del navegador */
 .landing-page-container {
     width: 100%;
     min-height: 100vh;
 }
 
-/* Banner de Portada a pantalla completa */
 .hero-banner {
     width: 100%;
     height: 220px;
@@ -49,7 +47,6 @@ body {
     background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
 }
 
-/* Contenido del perfil centrado con ancho de lectura cómodo */
 .business-profile-card {
     position: relative;
     padding: 0 24px 28px;
@@ -106,7 +103,6 @@ body {
     font-weight: 600;
 }
 
-/* Galería */
 .gallery-section {
     max-width: 680px;
     margin: 0 auto;
@@ -132,7 +128,6 @@ body {
     border-radius: 12px;
 }
 
-/* Sección de Reserva a ancho completo pero contenida para legibilidad */
 .booking-section {
     max-width: 680px;
     margin: 0 auto;
@@ -148,25 +143,127 @@ body {
 }
 
 .step-group { margin-bottom: 28px; }
-.step-title { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 12px; }
 
-.services-list { display: flex; flex-direction: column; gap: 10px; }
-.service-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s; }
-.service-item:hover, .service-item.selected { border-color: var(--primary); background: var(--primary-light); }
+.step-title { 
+    display: block; 
+    font-size: 13px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.6px; 
+    color: var(--muted); 
+    margin-bottom: 12px; 
+}
+
+.services-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.service-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 16px 20px; 
+    border: 2px solid var(--border); 
+    border-radius: 12px; 
+    cursor: pointer; 
+    transition: all 0.2s ease; 
+}
+
+.service-item:hover, .service-item.selected { 
+    border-color: var(--primary); 
+    background: var(--primary-light); 
+}
+
 .service-info strong { display: block; font-size: 15px; }
 .service-info span { font-size: 13px; color: var(--muted); }
 .service-price { font-weight: 700; color: var(--primary); font-size: 16px; }
 
-.date-input { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 8px; font-size: 15px; margin-bottom: 14px; }
-.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
-.slot-btn { padding: 12px; background: var(--white); border: 1.5px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer; }
-.slot-btn.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
+.date-input { 
+    width: 100%; 
+    padding: 14px 16px; 
+    border: 1.5px solid var(--border); 
+    border-radius: 10px; 
+    font-size: 15px; 
+    font-family: inherit;
+    color: var(--dark);
+    margin-bottom: 14px; 
+    background-color: var(--white);
+    cursor: pointer;
+}
+
+.date-input:focus { outline: none; border-color: var(--primary); }
+
+.info-text, .loading-text {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: left;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 6px 0;
+}
+
+.slots-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    gap: 10px; 
+    width: 100%;
+}
+
+.slot-btn { 
+    padding: 12px 14px; 
+    background: var(--white); 
+    border: 1.5px solid var(--border); 
+    border-radius: 10px; 
+    font-size: 14px; 
+    font-weight: 600; 
+    color: var(--dark); 
+    cursor: pointer; 
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.slot-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: var(--primary-light);
+}
+
+.slot-btn.selected { 
+    background: var(--primary); 
+    color: var(--white); 
+    border-color: var(--primary); 
+}
 
 .form-field { margin-bottom: 14px; }
 .form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-.form-field input { width: 100%; padding: 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; }
 
-.btn-confirm { width: 100%; padding: 16px; background: var(--success); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+.form-field input { 
+    width: 100%; 
+    padding: 14px; 
+    border: 1.5px solid var(--border); 
+    border-radius: 10px; 
+    font-size: 15px; 
+}
+
+.form-field input:focus { outline: none; border-color: var(--primary); }
+
+.btn-confirm { 
+    width: 100%; 
+    padding: 16px; 
+    background: var(--success); 
+    color: white; 
+    border: none; 
+    border-radius: 10px; 
+    font-size: 16px; 
+    font-weight: 700; 
+    cursor: pointer; 
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+.btn-confirm:hover:not(:disabled) { background: #15803d; }
 .btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
 
 .hidden { display: none !important; }
