@@ -1,14 +1,14 @@
 :root {
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --primary-light: #eff6ff;
-    --dark: #0f172a;
+    --primary: #059669;          /* Verde esmeralda */
+    --primary-hover: #047857;    /* Verde oscuro al interactuar */
+    --primary-light: #ecfdf5;    /* Verde mente suave */
+    --dark: #064e3b;             /* Verde bosque muy oscuro para títulos */
     --text: #334155;
     --muted: #64748b;
-    --bg-page: #f8fafc;
+    --bg-page: #f4fbf7;          /* Fondo menta ultra suave */
     --white: #ffffff;
     --border: #e2e8f0;
-    --success: #16a34a;
+    --success: #059669;
     --radius-card: 20px;
     --font: 'Inter', system-ui, -apple-system, sans-serif;
 }
