@@ -156,12 +156,15 @@ function populateProfileForm() {
     if (logoEl) logoEl.value = currentTenant.logoUrl || currentTenant.icon || '';
     if (coverEl) coverEl.value = currentTenant.coverUrl || '';
     if (instaEl) instaEl.value = currentTenant.instagram || '';
-    if (photosEl) photosEl.value = currentTenant.photos ? currentTenant.photos.join(', ') : '';
+
+    // Filtrar solo URLs HTTP para el input de texto y no ensuciar la casilla con cadenas Base64 gigantes
+    if (photosEl) {
+        const httpPhotos = (currentTenant.photos || []).filter(p => p.startsWith('http'));
+        photosEl.value = httpPhotos.join(', ');
+    }
 }
 
-/**
- * Función que convierte cualquier File de imagen a un string WebP en Base64 ultra liviano
- */
+// Convertir archivo de imagen a WebP Base64
 function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -185,7 +188,6 @@ function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // Convertir a Data URL WebP comprimido
                 const base64DataUrl = canvas.toDataURL('image/webp', quality);
                 resolve(base64DataUrl);
             };
@@ -195,7 +197,15 @@ function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
     });
 }
 
-// Guardar cambios del perfil directamente en Firestore como Base64 (Sin Storage)
+// Helper para separar múltiples URLs respetando Data URLs de Base64
+function parsePhotoUrls(photosInput) {
+    if (!photosInput) return [];
+    return photosInput
+        .split(/(?=https?:\/\/|data:image\/)/g)
+        .map(url => url.trim().replace(/^,|,$/g, ''))
+        .filter(url => url !== '');
+}
+
 async function handleUpdateProfile(e) {
     e.preventDefault();
     if (!currentTenant) return;
@@ -208,22 +218,28 @@ async function handleUpdateProfile(e) {
         let logoUrl = document.getElementById('edit-logo').value.trim();
         let coverUrl = document.getElementById('edit-cover').value.trim();
 
-        // Si el usuario seleccionó un archivo de logo, lo convertimos a WebP Base64 (máx 400px)
+        // Procesar archivo de logo
         const logoFileInput = document.getElementById('upload-logo-file');
         if (logoFileInput && logoFileInput.files.length > 0) {
             logoUrl = await fileToWebPBase64(logoFileInput.files[0], 400, 0.8);
         }
 
-        // Si seleccionó archivo de banner, lo convertimos a WebP Base64 (máx 1000px)
+        // Procesar archivo de portada
         const coverFileInput = document.getElementById('upload-cover-file');
         if (coverFileInput && coverFileInput.files.length > 0) {
             coverUrl = await fileToWebPBase64(coverFileInput.files[0], 1000, 0.75);
         }
 
+        // Mantener imágenes Base64 previamente guardadas
+        const existingBase64Photos = (currentTenant.photos || []).filter(p => p.startsWith('data:image'));
+        
         const photosRaw = document.getElementById('edit-photos').value.trim();
-        let photoUrls = photosRaw ? photosRaw.split(',').map(p => p.trim()).filter(p => p !== '') : [];
+        let photoUrls = [
+            ...existingBase64Photos,
+            ...parsePhotoUrls(photosRaw)
+        ];
 
-        // Si seleccionó fotos del local, las convertimos una por una (máx 800px)
+        // Procesar nuevas imágenes subidas
         const galleryFilesInput = document.getElementById('upload-gallery-files');
         if (galleryFilesInput && galleryFilesInput.files.length > 0) {
             for (let i = 0; i < galleryFilesInput.files.length; i++) {
