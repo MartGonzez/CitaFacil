@@ -60,7 +60,7 @@
             <nav class="sidebar-menu">
                 <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
                 <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
-                <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Landing Page</button>
+                <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Horarios</button>
             </nav>
 
             <div class="sidebar-footer">
@@ -135,12 +135,12 @@
                 </div>
             </section>
 
-            <!-- TAB 3: CONFIGURACIÓN LANDING PAGE -->
+            <!-- TAB 3: CONFIGURACIÓN LANDING PAGE Y HORARIOS -->
             <section id="tab-settings" class="tab-pane">
                 <header class="content-header">
                     <div>
                         <h2>Mi Perfil y Enlace Público</h2>
-                        <p>Personaliza cómo se ve tu negocio para tus clientes y obtén tu link de agendamiento.</p>
+                        <p>Personaliza cómo se ve tu negocio para tus clientes y configura tu disponibilidad laboral.</p>
                     </div>
                 </header>
 
@@ -154,8 +154,65 @@
                 </div>
 
                 <form id="profile-config-form" class="service-form-card" style="margin-top: 24px;">
-                    <h3>Personalizar Mi Landing Page</h3>
+                    <h3>Horarios de Trabajo y Disponibilidad</h3>
                     
+                    <!-- Días de atención -->
+                    <div class="form-field">
+                        <label>Días de Atención Laboral</label>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="1" checked> Lun</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="2" checked> Mar</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="3" checked> Mié</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="4" checked> Jue</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="5" checked> Vie</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="6" checked> Sáb</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="0"> Dom</label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="edit-start-hour">Hora de Apertura</label>
+                            <input type="time" id="edit-start-hour" value="09:00">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-end-hour">Hora de Cierre</label>
+                            <input type="time" id="edit-end-hour" value="19:00">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-max-advance">Anticipación Máxima de Reserva (días)</label>
+                            <input type="number" id="edit-max-advance" value="30" min="1" max="180">
+                        </div>
+                    </div>
+
+                    <!-- Horario de Almuerzo / Colación -->
+                    <div class="form-row">
+                        <div class="form-field" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                            <input type="checkbox" id="edit-has-break" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <label for="edit-has-break" style="margin-bottom: 0; cursor: pointer;">Pausa de Almuerzo / Descanso</label>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-break-start">Inicio Colación</label>
+                            <input type="time" id="edit-break-start" value="13:00">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-break-end">Fin Colación</label>
+                            <input type="time" id="edit-break-end" value="14:00">
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="background: var(--bg-light); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border); margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="edit-is-paused" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <span style="font-weight: 700; color: var(--dark);">Pausar Agenda Temporalmente (Bloquear todas las reservas)</span>
+                        </label>
+                        <p style="font-size: 12.5px; color: var(--muted); margin-top: 4px; margin-left: 28px;">
+                            Si activas esta opción, los clientes verán un aviso de que el negocio no está recibiendo citas.
+                        </p>
+                    </div>
+
+                    <h3 style="margin-top: 28px;">Personalizar Mi Landing Page</h3>
+
                     <div class="form-field">
                         <label for="edit-description">Descripción del Negocio</label>
                         <textarea id="edit-description" rows="3" placeholder="Contamos con amplia experiencia ofreciendo la mejor atención..."></textarea>
@@ -170,27 +227,6 @@
                             <label for="edit-phone">Teléfono / WhatsApp de Atención</label>
                             <input type="text" id="edit-phone" placeholder="56912345678">
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="edit-start-hour">Hora de Inicio de Jornada</label>
-                            <input type="time" id="edit-start-hour" value="09:00">
-                        </div>
-                        <div class="form-field">
-                            <label for="edit-end-hour">Hora de Fin de Jornada</label>
-                            <input type="time" id="edit-end-hour" value="19:00">
-                        </div>
-                    </div>
-
-                    <div class="form-field" style="background: var(--bg-light); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border);">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="edit-is-paused" style="width: 18px; height: 18px; accent-color: var(--primary);">
-                            <span style="font-weight: 700; color: var(--dark);">Pausar Agenda Temporalmente (Bloquear nuevas reservas)</span>
-                        </label>
-                        <p style="font-size: 12.5px; color: var(--muted); margin-top: 4px; margin-left: 28px;">
-                            Si activas esta opción, los clientes verán un aviso de que el negocio no está recibiendo citas en este momento.
-                        </p>
                     </div>
 
                     <div class="form-row">
