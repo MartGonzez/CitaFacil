@@ -53,15 +53,17 @@
     <div id="dashboard-container" class="dashboard-layout hidden">
         
         <aside class="sidebar">
-            <div class="sidebar-brand">
-                <span>📅</span> <strong>CitaFácil</strong>
+            <div class="sidebar-top">
+                <div class="sidebar-brand">
+                    <span>📅</span> <strong>CitaFácil</strong>
+                </div>
+                
+                <nav class="sidebar-menu">
+                    <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
+                    <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
+                    <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Horarios</button>
+                </nav>
             </div>
-            
-            <nav class="sidebar-menu">
-                <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
-                <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
-                <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Horarios</button>
-            </nav>
 
             <div class="sidebar-footer">
                 <span id="user-email-display">usuario@negocio.cl</span>
@@ -246,7 +248,6 @@
                         </div>
                         <div class="form-field">
                             <label for="edit-cover">O pegar URL del Banner</label>
-                            <!-- CORREGIDO: type="text" evita el error de validación HTML del navegador -->
                             <input type="text" id="edit-cover" placeholder="https://...">
                         </div>
                     </div>
@@ -268,7 +269,6 @@
                         <input type="text" id="edit-photos" placeholder="https://foto1.jpg, https://foto2.jpg">
                     </div>
 
-                    <!-- Galería con vista previa y eliminación -->
                     <div class="form-field">
                         <label>Fotos Subidas Actuales (Haz clic en Eliminar para borrarlas)</label>
                         <div id="gallery-preview-admin" class="gallery-preview-grid"></div>
