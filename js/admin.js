@@ -18,6 +18,7 @@ import {
 
 let currentTenant = null;
 let isRegisterMode = false;
+let allBookingsCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
@@ -52,6 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileForm) {
         profileForm.addEventListener('submit', handleUpdateProfile);
     }
+
+    const filterDate = document.getElementById('filter-date');
+    const filterStatus = document.getElementById('filter-status');
+    if (filterDate) filterDate.value = new Date().toISOString().split('T')[0];
+
+    if (filterDate) filterDate.addEventListener('change', renderFilteredBookings);
+    if (filterStatus) filterStatus.addEventListener('change', renderFilteredBookings);
 
     document.getElementById('btn-copy-url').addEventListener('click', () => {
         const input = document.getElementById('public-url-input');
@@ -108,6 +116,9 @@ async function handleAuthSubmit(e) {
                 slug: slug,
                 email: email,
                 plan: "trial",
+                startHour: "09:00",
+                endHour: "19:00",
+                isPaused: false,
                 createdAt: new Date()
             });
 
@@ -149,22 +160,33 @@ function populateProfileForm() {
     const coverEl = document.getElementById('edit-cover');
     const instaEl = document.getElementById('edit-instagram');
     const photosEl = document.getElementById('edit-photos');
+    const startHourEl = document.getElementById('edit-start-hour');
+    const endHourEl = document.getElementById('edit-end-hour');
+    const isPausedEl = document.getElementById('edit-is-paused');
 
     if (descEl) descEl.value = currentTenant.description || '';
     if (addressEl) addressEl.value = currentTenant.address || '';
     if (phoneEl) phoneEl.value = currentTenant.phone || '';
-    if (logoEl) logoEl.value = currentTenant.logoUrl || currentTenant.icon || '';
-    if (coverEl) coverEl.value = currentTenant.coverUrl || '';
+    if (startHourEl) startHourEl.value = currentTenant.startHour || '09:00';
+    if (endHourEl) endHourEl.value = currentTenant.endHour || '19:00';
+    if (isPausedEl) isPausedEl.checked = currentTenant.isPaused || false;
+
+    if (logoEl) {
+        const val = currentTenant.logoUrl || currentTenant.icon || '';
+        logoEl.value = val.startsWith('data:image') ? '📷 [Imagen de archivo subida]' : val;
+    }
+    if (coverEl) {
+        const val = currentTenant.coverUrl || '';
+        coverEl.value = val.startsWith('data:image') ? '🖼️ [Imagen de archivo subida]' : val;
+    }
     if (instaEl) instaEl.value = currentTenant.instagram || '';
 
-    // Filtrar solo URLs HTTP para el input de texto y no ensuciar la casilla con cadenas Base64 gigantes
     if (photosEl) {
         const httpPhotos = (currentTenant.photos || []).filter(p => p.startsWith('http'));
         photosEl.value = httpPhotos.join(', ');
     }
 }
 
-// Convertir archivo de imagen a WebP Base64
 function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -197,7 +219,6 @@ function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
     });
 }
 
-// Helper para separar múltiples URLs respetando Data URLs de Base64
 function parsePhotoUrls(photosInput) {
     if (!photosInput) return [];
     return photosInput
@@ -218,28 +239,23 @@ async function handleUpdateProfile(e) {
         let logoUrl = document.getElementById('edit-logo').value.trim();
         let coverUrl = document.getElementById('edit-cover').value.trim();
 
-        // Procesar archivo de logo
+        if (logoUrl.startsWith('📷')) logoUrl = currentTenant.logoUrl || '';
+        if (coverUrl.startsWith('🖼️')) coverUrl = currentTenant.coverUrl || '';
+
         const logoFileInput = document.getElementById('upload-logo-file');
         if (logoFileInput && logoFileInput.files.length > 0) {
             logoUrl = await fileToWebPBase64(logoFileInput.files[0], 400, 0.8);
         }
 
-        // Procesar archivo de portada
         const coverFileInput = document.getElementById('upload-cover-file');
         if (coverFileInput && coverFileInput.files.length > 0) {
             coverUrl = await fileToWebPBase64(coverFileInput.files[0], 1000, 0.75);
         }
 
-        // Mantener imágenes Base64 previamente guardadas
         const existingBase64Photos = (currentTenant.photos || []).filter(p => p.startsWith('data:image'));
-        
         const photosRaw = document.getElementById('edit-photos').value.trim();
-        let photoUrls = [
-            ...existingBase64Photos,
-            ...parsePhotoUrls(photosRaw)
-        ];
+        let photoUrls = [...existingBase64Photos, ...parsePhotoUrls(photosRaw)];
 
-        // Procesar nuevas imágenes subidas
         const galleryFilesInput = document.getElementById('upload-gallery-files');
         if (galleryFilesInput && galleryFilesInput.files.length > 0) {
             for (let i = 0; i < galleryFilesInput.files.length; i++) {
@@ -252,6 +268,9 @@ async function handleUpdateProfile(e) {
         const address = document.getElementById('edit-address').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
         const instagram = document.getElementById('edit-instagram').value.trim();
+        const startHour = document.getElementById('edit-start-hour').value;
+        const endHour = document.getElementById('edit-end-hour').value;
+        const isPaused = document.getElementById('edit-is-paused').checked;
 
         await updateDoc(doc(db, "tenants", currentTenant.id), {
             description,
@@ -261,6 +280,9 @@ async function handleUpdateProfile(e) {
             icon: logoUrl,
             coverUrl,
             instagram,
+            startHour,
+            endHour,
+            isPaused,
             photos: photoUrls
         });
 
@@ -273,11 +295,14 @@ async function handleUpdateProfile(e) {
             icon: logoUrl,
             coverUrl,
             instagram,
+            startHour,
+            endHour,
+            isPaused,
             photos: photoUrls
         };
 
         populateProfileForm();
-        alert("¡Tu perfil y fotos se guardaron exitosamente!");
+        alert("¡Tu perfil y configuración se guardaron exitosamente!");
 
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
@@ -289,34 +314,92 @@ async function handleUpdateProfile(e) {
 }
 
 async function loadBookings() {
-    const listContainer = document.getElementById('bookings-list');
-    listContainer.innerHTML = '';
-
     try {
         const snapshot = await getDocs(collection(db, `tenants/${currentTenant.id}/bookings`));
-        if (snapshot.empty) {
-            listContainer.innerHTML = '<p class="loading-text">Aún no registras citas agendadas.</p>';
-            return;
-        }
-
+        allBookingsCache = [];
         snapshot.forEach(docSnap => {
-            const b = docSnap.data();
-            const card = document.createElement('div');
-            card.className = 'booking-card-item';
-            card.innerHTML = `
-                <h4>${b.clientName}</h4>
-                <div class="booking-meta">
-                    <strong>Servicio:</strong> ${b.serviceName}<br>
-                    <strong>Fecha:</strong> ${b.date} - ${b.time} hrs
-                </div>
-                <a href="https://wa.me/${b.clientPhone.replace(/\+/g, '')}" target="_blank" class="booking-phone">
-                    💬 Contactar por WhatsApp
-                </a>
-            `;
-            listContainer.appendChild(card);
+            allBookingsCache.push({ id: docSnap.id, ...docSnap.data() });
         });
+        renderFilteredBookings();
     } catch (error) {
         console.error("Error cargando citas:", error);
+    }
+}
+
+function renderFilteredBookings() {
+    const listContainer = document.getElementById('bookings-list');
+    const selectedDate = document.getElementById('filter-date').value;
+    const selectedStatus = document.getElementById('filter-status').value;
+
+    listContainer.innerHTML = '';
+
+    let filtered = allBookingsCache.filter(b => {
+        const matchesDate = !selectedDate || b.date === selectedDate;
+        const status = b.status || 'confirmed';
+        const matchesStatus = selectedStatus === 'all' || status === selectedStatus;
+        return matchesDate && matchesStatus;
+    });
+
+    if (filtered.length === 0) {
+        listContainer.innerHTML = '<p class="loading-text">No hay citas para los filtros seleccionados.</p>';
+        return;
+    }
+
+    filtered.sort((a, b) => a.time.localeCompare(b.time));
+
+    filtered.forEach(b => {
+        const status = b.status || 'confirmed';
+        let statusBadge = '<span style="color:#d97706; font-weight:700;">Pendiente</span>';
+        if (status === 'terminada') statusBadge = '<span style="color:#059669; font-weight:700;">Atendida / Terminada</span>';
+        if (status === 'cancelada') statusBadge = '<span style="color:#dc2626; font-weight:700;">Cancelada</span>';
+        if (status === 'no-vino') statusBadge = '<span style="color:#4b5563; font-weight:700;">No vino</span>';
+
+        const card = document.createElement('div');
+        card.className = 'booking-card-item';
+        card.innerHTML = `
+            <h4>${b.clientName}</h4>
+            <div class="booking-meta">
+                <strong>Servicio:</strong> ${b.serviceName} ($${Number(b.servicePrice).toLocaleString('es-CL')})<br>
+                <strong>Fecha:</strong> ${b.date} - ${b.time} hrs<br>
+                <strong>Estado:</strong> ${statusBadge}
+            </div>
+            
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center;">
+                <a href="https://wa.me/${b.clientPhone.replace(/\+/g, '')}" target="_blank" class="booking-phone">
+                    💬 WhatsApp
+                </a>
+                
+                <select class="status-selector" data-id="${b.id}" style="padding: 7px 10px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 13px; font-weight: 600; font-family: inherit;">
+                    <option value="confirmed" ${status === 'confirmed' ? 'selected' : ''}>Pendiente</option>
+                    <option value="terminada" ${status === 'terminada' ? 'selected' : ''}>Atendida</option>
+                    <option value="cancelada" ${status === 'cancelada' ? 'selected' : ''}>Cancelada</option>
+                    <option value="no-vino" ${status === 'no-vino' ? 'selected' : ''}>No vino</option>
+                </select>
+            </div>
+        `;
+
+        card.querySelector('.status-selector').addEventListener('change', async (e) => {
+            const newStatus = e.target.value;
+            await updateBookingStatus(b.id, newStatus);
+        });
+
+        listContainer.appendChild(card);
+    });
+}
+
+async function updateBookingStatus(bookingId, newStatus) {
+    try {
+        await updateDoc(doc(db, `tenants/${currentTenant.id}/bookings`, bookingId), {
+            status: newStatus
+        });
+        const index = allBookingsCache.findIndex(b => b.id === bookingId);
+        if (index !== -1) {
+            allBookingsCache[index].status = newStatus;
+        }
+        renderFilteredBookings();
+    } catch (error) {
+        console.error("Error al actualizar estado:", error);
+        alert("No se pudo actualizar el estado de la cita.");
     }
 }
 
@@ -336,16 +419,20 @@ async function loadServicesAdmin() {
             const card = document.createElement('div');
             card.className = 'service-card-admin';
             card.innerHTML = `
-                <h4>${s.name}</h4>
-                <div class="booking-meta">
-                    Duración: ${s.duration} min | Precio: $${Number(s.price).toLocaleString('es-CL')}
+                <div>
+                    <h4>${s.name}</h4>
+                    <div class="booking-meta">
+                        Duración: ${s.duration} min | Precio: $${Number(s.price).toLocaleString('es-CL')}
+                    </div>
                 </div>
-                <button class="btn-logout" style="width: auto;" data-id="${docSnap.id}">Eliminar</button>
+                <button class="btn-logout" data-id="${docSnap.id}">Eliminar</button>
             `;
 
             card.querySelector('button').addEventListener('click', async () => {
-                await deleteDoc(doc(db, `tenants/${currentTenant.id}/services`, docSnap.id));
-                loadServicesAdmin();
+                if (confirm("¿Estás seguro de eliminar este servicio?")) {
+                    await deleteDoc(doc(db, `tenants/${currentTenant.id}/services`, docSnap.id));
+                    loadServicesAdmin();
+                }
             });
 
             container.appendChild(card);
