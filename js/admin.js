@@ -16,6 +16,11 @@ import {
     updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// Configuración de pagos y clave secreta
+const MERCADO_PAGO_MONTHLY_LINK = "https://www.mercadopago.cl/subscriptions/checkout?preapproval_plan_id=TU_PLAN_MENSUAL_ID";
+const MERCADO_PAGO_YEARLY_LINK = "https://www.mercadopago.cl/subscriptions/checkout?preapproval_plan_id=TU_PLAN_ANUAL_ID";
+const MASTER_ADMIN_KEY = "admin1234"; // Cambia esta clave secreta según prefieras
+
 let currentTenant = null;
 let isRegisterMode = false;
 let allBookingsCache = [];
@@ -67,6 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(input.value);
         alert("¡Enlace copiado al portapapeles!");
     });
+
+    // Eventos de Facturación / Suscripción
+    setupBillingEvents();
 });
 
 function toggleAuthMode() {
@@ -110,12 +118,19 @@ async function handleAuthSubmit(e) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const uid = userCredential.user.uid;
 
+            // Calcular 14 días gratis de prueba
+            const trialExpires = new Date();
+            trialExpires.setDate(trialExpires.getDate() + 14);
+
             await setDoc(doc(db, "tenants", uid), {
                 ownerUid: uid,
                 name: businessName,
                 slug: slug,
                 email: email,
                 plan: "trial",
+                planStatus: "active",
+                planExpiresAt: trialExpires.toISOString(),
+                isLifetime: false,
                 startHour: "09:00",
                 endHour: "19:00",
                 workingDays: [1, 2, 3, 4, 5, 6],
@@ -148,11 +163,109 @@ async function loadTenantProfile(uid) {
             document.getElementById('btn-visit-public').href = `../agenda.html?b=${currentTenant.slug}`;
 
             populateProfileForm();
+            renderBillingStatus();
             await loadBookings();
             await loadServicesAdmin();
         }
     } catch (error) {
         console.error("Error al cargar perfil:", error);
+    }
+}
+
+function renderBillingStatus() {
+    if (!currentTenant) return;
+
+    const planNameEl = document.getElementById('current-plan-name');
+    const planExpEl = document.getElementById('current-plan-expiration');
+    const badgeEl = document.getElementById('plan-status-badge');
+    const pricingContainer = document.getElementById('pricing-options-container');
+
+    if (!planNameEl || !planExpEl || !badgeEl) return;
+
+    const plan = currentTenant.plan || 'trial';
+    const isLifetime = currentTenant.isLifetime || plan === 'lifetime';
+
+    if (isLifetime) {
+        planNameEl.innerHTML = "Plan Vitalicio (Lifetime) 🎁";
+        planExpEl.textContent = "Acceso permanente activo sin fecha de vencimiento.";
+        badgeEl.innerHTML = `<span style="background:#dcfce7; color:#15803d; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">LIFETIME</span>`;
+        if (pricingContainer) pricingContainer.style.display = 'none';
+        return;
+    }
+
+    if (pricingContainer) pricingContainer.style.display = 'grid';
+
+    if (plan === 'mensual') {
+        planNameEl.textContent = "Plan Mensual ($9.900 CLP/mes)";
+    } else if (plan === 'anual') {
+        planNameEl.textContent = "Plan Anual ($99.000 CLP/año)";
+    } else {
+        planNameEl.textContent = "Período de Prueba (14 Días Gratis)";
+    }
+
+    if (currentTenant.planExpiresAt) {
+        const expDate = new Date(currentTenant.planExpiresAt);
+        const now = new Date();
+        if (now > expDate) {
+            planExpEl.textContent = `Vencido el: ${expDate.toLocaleDateString('es-CL')}`;
+            badgeEl.innerHTML = `<span style="background:#fee2e2; color:#dc2626; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">VENCIDO</span>`;
+        } else {
+            planExpEl.textContent = `Válido hasta el: ${expDate.toLocaleDateString('es-CL')}`;
+            badgeEl.innerHTML = `<span style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">ACTIVO</span>`;
+        }
+    } else {
+        planExpEl.textContent = "Estado de facturación activo.";
+        badgeEl.innerHTML = `<span style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">ACTIVO</span>`;
+    }
+}
+
+function setupBillingEvents() {
+    const btnMonthly = document.getElementById('btn-pay-monthly');
+    const btnYearly = document.getElementById('btn-pay-yearly');
+    const btnGrantLifetime = document.getElementById('btn-grant-lifetime');
+
+    if (btnMonthly) {
+        btnMonthly.addEventListener('click', () => {
+            window.open(`${MERCADO_PAGO_MONTHLY_LINK}&external_reference=${currentTenant.id}`, '_blank');
+        });
+    }
+
+    if (btnYearly) {
+        btnYearly.addEventListener('click', () => {
+            window.open(`${MERCADO_PAGO_YEARLY_LINK}&external_reference=${currentTenant.id}`, '_blank');
+        });
+    }
+
+    if (btnGrantLifetime) {
+        btnGrantLifetime.addEventListener('click', async () => {
+            const secretInput = document.getElementById('admin-secret-key').value.trim();
+
+            if (secretInput !== MASTER_ADMIN_KEY) {
+                alert("Clave de administrador incorrecta.");
+                return;
+            }
+
+            if (confirm(`¿Deseas otorgar acceso LIFETIME gratuito al negocio "${currentTenant.name}"?`)) {
+                try {
+                    await setDoc(doc(db, "tenants", currentTenant.id), {
+                        plan: "lifetime",
+                        planStatus: "active",
+                        isLifetime: true,
+                        planExpiresAt: null
+                    }, { merge: true });
+
+                    currentTenant.plan = "lifetime";
+                    currentTenant.isLifetime = true;
+                    currentTenant.planExpiresAt = null;
+
+                    renderBillingStatus();
+                    alert("¡Plan Lifetime asignado exitosamente!");
+                } catch (err) {
+                    console.error("Error asignando Lifetime:", err);
+                    alert("Error al guardar cambios.");
+                }
+            }
+        });
     }
 }
 
@@ -211,7 +324,6 @@ function populateProfileForm() {
 function renderImagePreviews() {
     if (!currentTenant) return;
 
-    // 1. Preview Logo
     const logoBox = document.getElementById('logo-preview-box');
     const logoSrc = currentTenant.logoUrl || currentTenant.icon;
     if (logoSrc) {
@@ -231,7 +343,6 @@ function renderImagePreviews() {
         logoBox.innerHTML = '';
     }
 
-    // 2. Preview Portada
     const coverBox = document.getElementById('cover-preview-box');
     if (currentTenant.coverUrl) {
         coverBox.innerHTML = `
@@ -249,7 +360,6 @@ function renderImagePreviews() {
         coverBox.innerHTML = '';
     }
 
-    // 3. Preview Galería de Fotos
     const galleryContainer = document.getElementById('gallery-preview-admin');
     galleryContainer.innerHTML = '';
 
@@ -511,7 +621,7 @@ async function loadServicesAdmin() {
     try {
         const snapshot = await getDocs(collection(db, `tenants/${currentTenant.id}/services`));
         if (snapshot.empty) {
-            container.innerHTML = '<p class="loading-text">No me has agregado servicios todavía.</p>';
+            container.innerHTML = '<p class="loading-text">No has agregado servicios todavía.</p>';
             return;
         }
 
