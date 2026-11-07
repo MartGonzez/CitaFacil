@@ -414,6 +414,49 @@ body {
 .service-card-admin button:hover {
     background: #fee2e2;
 }
+/* Vista Previa de Imágenes y Galería en Admin */
+.gallery-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.thumb-preview-item {
+    position: relative;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.thumb-preview-item img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.btn-delete-thumb {
+    width: 100%;
+    padding: 4px 8px;
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: var(--danger);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-delete-thumb:hover {
+    background: #fee2e2;
+}
 
 .hidden { display: none !important; }
 
