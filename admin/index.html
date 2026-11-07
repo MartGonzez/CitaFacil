@@ -156,7 +156,6 @@
                 <form id="profile-config-form" class="service-form-card" style="margin-top: 24px;">
                     <h3>Horarios de Trabajo y Disponibilidad</h3>
                     
-                    <!-- Días de atención -->
                     <div class="form-field">
                         <label>Días de Atención Laboral</label>
                         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
@@ -185,7 +184,6 @@
                         </div>
                     </div>
 
-                    <!-- Horario de Almuerzo / Colación -->
                     <div class="form-row">
                         <div class="form-field" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
                             <input type="checkbox" id="edit-has-break" style="width: 18px; height: 18px; accent-color: var(--primary);">
@@ -239,6 +237,7 @@
                             <input type="text" id="edit-logo" placeholder="💈 o https://...">
                         </div>
                     </div>
+                    <div id="logo-preview-box" style="margin-bottom: 16px;"></div>
 
                     <div class="form-row">
                         <div class="form-field">
@@ -247,9 +246,11 @@
                         </div>
                         <div class="form-field">
                             <label for="edit-cover">O pegar URL del Banner</label>
-                            <input type="url" id="edit-cover" placeholder="https://...">
+                            <!-- CORREGIDO: type="text" evita el error de validación HTML del navegador -->
+                            <input type="text" id="edit-cover" placeholder="https://...">
                         </div>
                     </div>
+                    <div id="cover-preview-box" style="margin-bottom: 16px;"></div>
 
                     <div class="form-row">
                         <div class="form-field">
@@ -265,6 +266,12 @@
                     <div class="form-field">
                         <label for="edit-photos">URLs de Fotos adicionales (separadas por comas)</label>
                         <input type="text" id="edit-photos" placeholder="https://foto1.jpg, https://foto2.jpg">
+                    </div>
+
+                    <!-- Galería con vista previa y eliminación -->
+                    <div class="form-field">
+                        <label>Fotos Subidas Actuales (Haz clic en Eliminar para borrarlas)</label>
+                        <div id="gallery-preview-admin" class="gallery-preview-grid"></div>
                     </div>
 
                     <button type="submit" id="btn-save-profile" class="btn-primary">Guardar Cambios del Perfil</button>
