@@ -310,6 +310,127 @@ body {
     background: var(--primary-light);
 }
 
+/* ==========================================
+   CORRECCIÓN DE SECCIÓN: CITAS AGENDADAS
+   ========================================== */
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.booking-card-item {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 4px 12px rgba(6, 78, 59, 0.03);
+    transition: all 0.2s ease;
+}
+
+.booking-card-item:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.booking-card-item h4 {
+    font-size: 16px;
+    color: var(--dark);
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.booking-meta {
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+
+.booking-meta strong {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* Botón de WhatsApp para citas */
+.booking-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--primary-light);
+    color: var(--primary);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.booking-phone:hover {
+    background: #d1fae5;
+}
+
+
+/* ==========================================
+   CORRECCIÓN DE SECCIÓN: SERVICIOS Y PRECIOS
+   ========================================== */
+.services-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.service-card-admin {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 4px 12px rgba(6, 78, 59, 0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.service-card-admin:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.service-card-admin h4 {
+    font-size: 16px;
+    color: var(--dark);
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.service-card-admin .booking-meta {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+}
+
+/* Botón de eliminar servicio */
+.service-card-admin button {
+    align-self: flex-start;
+    padding: 7px 12px;
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: var(--danger);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.service-card-admin button:hover {
+    background: #fee2e2;
+}
+
 .hidden { display: none !important; }
 
 @media (max-width: 768px) {
