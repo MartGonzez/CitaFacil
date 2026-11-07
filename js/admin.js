@@ -12,8 +12,8 @@ import {
     getDocs, 
     setDoc, 
     addDoc, 
-    updateDoc, 
-    deleteDoc 
+    deleteDoc,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 let currentTenant = null;
@@ -125,7 +125,7 @@ async function handleAuthSubmit(e) {
                 breakEnd: "14:00",
                 isPaused: false,
                 createdAt: new Date()
-            });
+            }, { merge: true });
 
         } else {
             await signInWithEmailAndPassword(auth, email, password);
@@ -171,7 +171,7 @@ function populateProfileForm() {
     const maxAdvanceEl = document.getElementById('edit-max-advance');
     const hasBreakEl = document.getElementById('edit-has-break');
     const breakStartEl = document.getElementById('edit-break-start');
-    const breakEndEl = document.getElementById('edit-end-break') || document.getElementById('edit-break-end');
+    const breakEndEl = document.getElementById('edit-break-end');
 
     if (descEl) descEl.value = currentTenant.description || '';
     if (addressEl) addressEl.value = currentTenant.address || '';
@@ -184,7 +184,6 @@ function populateProfileForm() {
     if (breakStartEl) breakStartEl.value = currentTenant.breakStart || '13:00';
     if (breakEndEl) breakEndEl.value = currentTenant.breakEnd || '14:00';
 
-    // Días de trabajo
     const activeWorkingDays = currentTenant.workingDays || [1, 2, 3, 4, 5, 6];
     document.querySelectorAll('.work-day-check').forEach(chk => {
         chk.checked = activeWorkingDays.includes(Number(chk.value));
@@ -252,7 +251,7 @@ async function handleUpdateProfile(e) {
 
     const saveBtn = document.getElementById('btn-save-profile');
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Procesando imágenes y guardando...';
+    saveBtn.textContent = 'Guardando configuración...';
 
     try {
         let logoUrl = document.getElementById('edit-logo').value.trim();
@@ -283,7 +282,6 @@ async function handleUpdateProfile(e) {
             }
         }
 
-        // Obtener días seleccionados
         const workingDays = [];
         document.querySelectorAll('.work-day-check:checked').forEach(chk => {
             workingDays.push(Number(chk.value));
@@ -293,35 +291,15 @@ async function handleUpdateProfile(e) {
         const address = document.getElementById('edit-address').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
         const instagram = document.getElementById('edit-instagram').value.trim();
-        const startHour = document.getElementById('edit-start-hour').value;
-        const endHour = document.getElementById('edit-end-hour').value;
+        const startHour = document.getElementById('edit-start-hour').value || '09:00';
+        const endHour = document.getElementById('edit-end-hour').value || '19:00';
         const maxAdvanceDays = Number(document.getElementById('edit-max-advance').value) || 30;
         const isPaused = document.getElementById('edit-is-paused').checked;
         const hasBreak = document.getElementById('edit-has-break').checked;
-        const breakStart = document.getElementById('edit-break-start').value;
+        const breakStart = document.getElementById('edit-break-start').value || '13:00';
         const breakEnd = document.getElementById('edit-break-end') ? document.getElementById('edit-break-end').value : '14:00';
 
-        await updateDoc(doc(db, "tenants", currentTenant.id), {
-            description,
-            address,
-            phone,
-            logoUrl,
-            icon: logoUrl,
-            coverUrl,
-            instagram,
-            startHour,
-            endHour,
-            workingDays,
-            maxAdvanceDays,
-            hasBreak,
-            breakStart,
-            breakEnd,
-            isPaused,
-            photos: photoUrls
-        });
-
-        currentTenant = {
-            ...currentTenant,
+        const updatedData = {
             description,
             address,
             phone,
@@ -340,8 +318,16 @@ async function handleUpdateProfile(e) {
             photos: photoUrls
         };
 
+        // Guardar de forma segura fusionando el documento en Firestore
+        await setDoc(doc(db, "tenants", currentTenant.id), updatedData, { merge: true });
+
+        currentTenant = {
+            ...currentTenant,
+            ...updatedData
+        };
+
         populateProfileForm();
-        alert("¡Tu perfil y configuración de horarios se guardaron exitosamente!");
+        alert("¡Tu perfil y horarios se guardaron correctamente en la nube!");
 
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
