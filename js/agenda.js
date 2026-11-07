@@ -66,11 +66,20 @@ async function loadTenantData(slug) {
 
         nameEl.textContent = currentTenant.name || 'Agenda de Citas';
         addressEl.textContent = currentTenant.address ? `📍 ${currentTenant.address}` : '📍 Santiago, Chile';
+
+        if (currentTenant.isPaused) {
+            document.getElementById('booking-form').innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 14px; color: #b45309;">
+                    <h3 style="font-size: 18px; font-weight: 800;">⏸️ Agenda Temporalmente Pausada</h3>
+                    <p style="margin-top: 8px; font-size: 14px;">Este negocio no está recibiendo nuevas reservas en este momento. Vuelve a intentarlo más tarde.</p>
+                </div>
+            `;
+        }
+
         if (descEl) {
             descEl.textContent = currentTenant.description || 'Bienvenido a nuestra agenda online. Reserva tu hora en segundos.';
         }
 
-        // Renderizar Logo (Soporta HTTP, HTTPS y Base64 data:image)
         if (currentTenant.logoUrl || currentTenant.icon) {
             const logoEl = document.getElementById('business-logo');
             const logoSrc = currentTenant.logoUrl || currentTenant.icon;
@@ -109,9 +118,11 @@ async function loadTenantData(slug) {
 
         await loadServices(tenantDoc.id);
 
-        const dateInput = document.getElementById('booking-date');
-        const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
-        await loadAvailableSlots(selectedDate);
+        if (!currentTenant.isPaused) {
+            const dateInput = document.getElementById('booking-date');
+            const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            await loadAvailableSlots(selectedDate);
+        }
 
     } catch (error) {
         console.error("Error al cargar negocio:", error);
@@ -161,6 +172,23 @@ async function loadServices(tenantId) {
     }
 }
 
+function generateTimeSlots(startStr = "09:00", endStr = "19:00", intervalMinutes = 60) {
+    const slots = [];
+    let [startHour, startMin] = startStr.split(':').map(Number);
+    let [endHour, endMin] = endStr.split(':').map(Number);
+
+    let current = startHour * 60 + startMin;
+    const end = endHour * 60 + endMin;
+
+    while (current < end) {
+        const h = Math.floor(current / 60).toString().padStart(2, '0');
+        const m = (current % 60).toString().padStart(2, '0');
+        slots.push(`${h}:${m}`);
+        current += intervalMinutes;
+    }
+    return slots;
+}
+
 async function loadAvailableSlots(selectedDate) {
     const slotsContainer = document.getElementById('slots-container');
     slotsContainer.innerHTML = '<p class="loading-text">Buscando disponibilidad...</p>';
@@ -169,16 +197,25 @@ async function loadAvailableSlots(selectedDate) {
 
     if (!currentTenant) return;
 
-    const baseSlots = ["10:00", "11:00", "12:00", "15:00", "16:00", "17:00", "18:00"];
+    const startH = currentTenant.startHour || "09:00";
+    const endH = currentTenant.endHour || "19:00";
+    const baseSlots = generateTimeSlots(startH, endH, 60);
 
     try {
         const bookingsQ = query(
             collection(db, `tenants/${currentTenant.id}/bookings`),
-            where("date", "==", selectedDate),
-            where("status", "==", "confirmed")
+            where("date", "==", selectedDate)
         );
         const bookedSnapshot = await getDocs(bookingsQ);
-        const occupiedSlots = bookedSnapshot.docs.map(doc => doc.data().time);
+        
+        const occupiedSlots = [];
+        bookedSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const status = data.status || 'confirmed';
+            if (status === 'confirmed' || status === 'pending') {
+                occupiedSlots.push(data.time);
+            }
+        });
 
         const freeSlots = baseSlots.filter(slot => !occupiedSlots.includes(slot));
 
