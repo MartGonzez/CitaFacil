@@ -124,6 +124,7 @@ async function handleAuthSubmit(e) {
                 breakStart: "13:00",
                 breakEnd: "14:00",
                 isPaused: false,
+                photos: [],
                 createdAt: new Date()
             }, { merge: true });
 
@@ -189,13 +190,14 @@ function populateProfileForm() {
         chk.checked = activeWorkingDays.includes(Number(chk.value));
     });
 
+    // Solo poner el valor en los inputs si es una URL http (no ensucian ni rompen con Base64)
     if (logoEl) {
         const val = currentTenant.logoUrl || currentTenant.icon || '';
-        logoEl.value = val.startsWith('data:image') ? '📷 [Imagen de archivo subida]' : val;
+        logoEl.value = val.startsWith('http') ? val : '';
     }
     if (coverEl) {
         const val = currentTenant.coverUrl || '';
-        coverEl.value = val.startsWith('data:image') ? '🖼️ [Imagen de archivo subida]' : val;
+        coverEl.value = val.startsWith('http') ? val : '';
     }
     if (instaEl) instaEl.value = currentTenant.instagram || '';
 
@@ -203,6 +205,78 @@ function populateProfileForm() {
         const httpPhotos = (currentTenant.photos || []).filter(p => p.startsWith('http'));
         photosEl.value = httpPhotos.join(', ');
     }
+
+    renderImagePreviews();
+}
+
+// Renderizar Vistas Previas y Botones para Eliminar Imagenes
+function renderImagePreviews() {
+    if (!currentTenant) return;
+
+    // 1. Preview Logo
+    const logoBox = document.getElementById('logo-preview-box');
+    const logoSrc = currentTenant.logoUrl || currentTenant.icon;
+    if (logoSrc) {
+        logoBox.innerHTML = `
+            <div class="thumb-preview-item">
+                <img src="${logoSrc}" alt="Logo">
+                <button type="button" class="btn-delete-thumb" id="btn-delete-logo">🗑️ Eliminar Logo</button>
+            </div>
+        `;
+        document.getElementById('btn-delete-logo').addEventListener('click', async () => {
+            currentTenant.logoUrl = '';
+            currentTenant.icon = '';
+            await updateDoc(doc(db, "tenants", currentTenant.id), { logoUrl: '', icon: '' });
+            populateProfileForm();
+        });
+    } else {
+        logoBox.innerHTML = '';
+    }
+
+    // 2. Preview Portada
+    const coverBox = document.getElementById('cover-preview-box');
+    if (currentTenant.coverUrl) {
+        coverBox.innerHTML = `
+            <div class="thumb-preview-item">
+                <img src="${currentTenant.coverUrl}" alt="Portada" style="max-height:90px; width:100%; object-fit:cover;">
+                <button type="button" class="btn-delete-thumb" id="btn-delete-cover">🗑️ Eliminar Portada</button>
+            </div>
+        `;
+        document.getElementById('btn-delete-cover').addEventListener('click', async () => {
+            currentTenant.coverUrl = '';
+            await updateDoc(doc(db, "tenants", currentTenant.id), { coverUrl: '' });
+            populateProfileForm();
+        });
+    } else {
+        coverBox.innerHTML = '';
+    }
+
+    // 3. Preview Galería de Fotos
+    const galleryContainer = document.getElementById('gallery-preview-admin');
+    galleryContainer.innerHTML = '';
+
+    const photos = currentTenant.photos || [];
+    if (photos.length === 0) {
+        galleryContainer.innerHTML = '<p class="loading-text">No has subido fotos a la galería aún.</p>';
+        return;
+    }
+
+    photos.forEach((photoUrl, index) => {
+        const item = document.createElement('div');
+        item.className = 'thumb-preview-item';
+        item.innerHTML = `
+            <img src="${photoUrl}" alt="Foto ${index + 1}">
+            <button type="button" class="btn-delete-thumb">🗑️ Eliminar</button>
+        `;
+
+        item.querySelector('button').addEventListener('click', async () => {
+            currentTenant.photos.splice(index, 1);
+            await updateDoc(doc(db, "tenants", currentTenant.id), { photos: currentTenant.photos });
+            populateProfileForm();
+        });
+
+        galleryContainer.appendChild(item);
+    });
 }
 
 function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
@@ -242,7 +316,7 @@ function parsePhotoUrls(photosInput) {
     return photosInput
         .split(/(?=https?:\/\/|data:image\/)/g)
         .map(url => url.trim().replace(/^,|,$/g, ''))
-        .filter(url => url !== '');
+        .filter(url => url !== '' && url.startsWith('http'));
 }
 
 async function handleUpdateProfile(e) {
@@ -254,11 +328,8 @@ async function handleUpdateProfile(e) {
     saveBtn.textContent = 'Guardando configuración...';
 
     try {
-        let logoUrl = document.getElementById('edit-logo').value.trim();
-        let coverUrl = document.getElementById('edit-cover').value.trim();
-
-        if (logoUrl.startsWith('📷')) logoUrl = currentTenant.logoUrl || '';
-        if (coverUrl.startsWith('🖼️')) coverUrl = currentTenant.coverUrl || '';
+        let logoUrl = document.getElementById('edit-logo').value.trim() || currentTenant.logoUrl || '';
+        let coverUrl = document.getElementById('edit-cover').value.trim() || currentTenant.coverUrl || '';
 
         const logoFileInput = document.getElementById('upload-logo-file');
         if (logoFileInput && logoFileInput.files.length > 0) {
@@ -270,9 +341,9 @@ async function handleUpdateProfile(e) {
             coverUrl = await fileToWebPBase64(coverFileInput.files[0], 1000, 0.75);
         }
 
-        const existingBase64Photos = (currentTenant.photos || []).filter(p => p.startsWith('data:image'));
-        const photosRaw = document.getElementById('edit-photos').value.trim();
-        let photoUrls = [...existingBase64Photos, ...parsePhotoUrls(photosRaw)];
+        const existingPhotos = currentTenant.photos || [];
+        const newHttpPhotos = parsePhotoUrls(document.getElementById('edit-photos').value.trim());
+        let photoUrls = [...existingPhotos, ...newHttpPhotos];
 
         const galleryFilesInput = document.getElementById('upload-gallery-files');
         if (galleryFilesInput && galleryFilesInput.files.length > 0) {
@@ -281,6 +352,9 @@ async function handleUpdateProfile(e) {
                 photoUrls.push(base64Photo);
             }
         }
+
+        // Eliminar duplicados si los hay
+        photoUrls = [...new Set(photoUrls)];
 
         const workingDays = [];
         document.querySelectorAll('.work-day-check:checked').forEach(chk => {
@@ -318,7 +392,6 @@ async function handleUpdateProfile(e) {
             photos: photoUrls
         };
 
-        // Guardar de forma segura fusionando el documento en Firestore
         await setDoc(doc(db, "tenants", currentTenant.id), updatedData, { merge: true });
 
         currentTenant = {
@@ -326,8 +399,15 @@ async function handleUpdateProfile(e) {
             ...updatedData
         };
 
+        // Limpiar inputs de archivo
+        if (logoFileInput) logoFileInput.value = '';
+        if (coverFileInput) coverFileInput.value = '';
+        const galleryFileInput = document.getElementById('upload-gallery-files');
+        if (galleryFileInput) galleryFileInput.value = '';
+        document.getElementById('edit-photos').value = '';
+
         populateProfileForm();
-        alert("¡Tu perfil y horarios se guardaron correctamente en la nube!");
+        alert("¡Tu perfil y fotos se guardaron correctamente!");
 
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
