@@ -67,15 +67,29 @@ async function loadTenantData(slug) {
         nameEl.textContent = currentTenant.name || 'Agenda de Citas';
         addressEl.textContent = currentTenant.address ? `📍 ${currentTenant.address}` : '📍 Santiago, Chile';
 
-        // Configurar fecha límite máxima según la anticipación permitida
-        const dateInput = document.getElementById('booking-date');
-        if (dateInput) {
-            const maxDays = currentTenant.maxAdvanceDays || 30;
-            const maxDate = new Date();
-            maxDate.setDate(maxDate.getDate() + maxDays);
-            dateInput.max = maxDate.toISOString().split('T')[0];
+        // 1. VALIDACIÓN DE EXPIRACIÓN DE PLAN / SUSCRIPCIÓN
+        const now = new Date();
+        const isLifetime = currentTenant.isLifetime || currentTenant.plan === 'lifetime';
+        let isExpired = false;
+
+        if (!isLifetime && currentTenant.planExpiresAt) {
+            const expDate = new Date(currentTenant.planExpiresAt);
+            if (now > expDate) {
+                isExpired = true;
+            }
         }
 
+        if (isExpired) {
+            document.getElementById('booking-form').innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 14px; color: #991b1b;">
+                    <h3 style="font-size: 18px; font-weight: 800;">⚠️ Servicio Suspendido</h3>
+                    <p style="margin-top: 8px; font-size: 14px;">La suscripción de este negocio ha expirado. Si eres el dueño, ingresa a tu panel de control para renovarla.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // 2. VALIDACIÓN DE AGENDA PAUSADA TEMPORALMENTE
         if (currentTenant.isPaused) {
             document.getElementById('booking-form').innerHTML = `
                 <div style="text-align: center; padding: 40px 20px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 14px; color: #b45309;">
@@ -83,6 +97,15 @@ async function loadTenantData(slug) {
                     <p style="margin-top: 8px; font-size: 14px;">Este negocio no está recibiendo nuevas reservas en este momento. Vuelve a intentarlo más tarde.</p>
                 </div>
             `;
+        }
+
+        // Configurar fecha límite máxima según la anticipación permitida
+        const dateInput = document.getElementById('booking-date');
+        if (dateInput) {
+            const maxDays = currentTenant.maxAdvanceDays || 30;
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + maxDays);
+            dateInput.max = maxDate.toISOString().split('T')[0];
         }
 
         if (descEl) {
@@ -127,7 +150,7 @@ async function loadTenantData(slug) {
 
         await loadServices(tenantDoc.id);
 
-        if (!currentTenant.isPaused) {
+        if (!currentTenant.isPaused && !isExpired) {
             const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
             await loadAvailableSlots(selectedDate);
         }
@@ -197,7 +220,6 @@ function generateTimeSlots(startStr = "09:00", endStr = "19:00", intervalMinutes
     }
 
     while (current < end) {
-        // Omitir bloques que caigan dentro del horario de almuerzo/descanso
         if (!hasBreak || (current < bStart || current >= bEnd)) {
             const h = Math.floor(current / 60).toString().padStart(2, '0');
             const m = (current % 60).toString().padStart(2, '0');
@@ -216,10 +238,9 @@ async function loadAvailableSlots(selectedDate) {
 
     if (!currentTenant) return;
 
-    // 1. Validar si el negocio trabaja en el día de la semana seleccionado
     const dateParts = selectedDate.split('-');
     const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
-    const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 1 = Lunes...
+    const dayOfWeek = dateObj.getDay();
     const workingDays = currentTenant.workingDays || [1, 2, 3, 4, 5, 6];
 
     if (!workingDays.includes(dayOfWeek)) {
