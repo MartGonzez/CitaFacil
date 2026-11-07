@@ -118,6 +118,11 @@ async function handleAuthSubmit(e) {
                 plan: "trial",
                 startHour: "09:00",
                 endHour: "19:00",
+                workingDays: [1, 2, 3, 4, 5, 6],
+                maxAdvanceDays: 30,
+                hasBreak: false,
+                breakStart: "13:00",
+                breakEnd: "14:00",
                 isPaused: false,
                 createdAt: new Date()
             });
@@ -163,13 +168,27 @@ function populateProfileForm() {
     const startHourEl = document.getElementById('edit-start-hour');
     const endHourEl = document.getElementById('edit-end-hour');
     const isPausedEl = document.getElementById('edit-is-paused');
+    const maxAdvanceEl = document.getElementById('edit-max-advance');
+    const hasBreakEl = document.getElementById('edit-has-break');
+    const breakStartEl = document.getElementById('edit-break-start');
+    const breakEndEl = document.getElementById('edit-end-break') || document.getElementById('edit-break-end');
 
     if (descEl) descEl.value = currentTenant.description || '';
     if (addressEl) addressEl.value = currentTenant.address || '';
     if (phoneEl) phoneEl.value = currentTenant.phone || '';
     if (startHourEl) startHourEl.value = currentTenant.startHour || '09:00';
     if (endHourEl) endHourEl.value = currentTenant.endHour || '19:00';
+    if (maxAdvanceEl) maxAdvanceEl.value = currentTenant.maxAdvanceDays || 30;
     if (isPausedEl) isPausedEl.checked = currentTenant.isPaused || false;
+    if (hasBreakEl) hasBreakEl.checked = currentTenant.hasBreak || false;
+    if (breakStartEl) breakStartEl.value = currentTenant.breakStart || '13:00';
+    if (breakEndEl) breakEndEl.value = currentTenant.breakEnd || '14:00';
+
+    // Días de trabajo
+    const activeWorkingDays = currentTenant.workingDays || [1, 2, 3, 4, 5, 6];
+    document.querySelectorAll('.work-day-check').forEach(chk => {
+        chk.checked = activeWorkingDays.includes(Number(chk.value));
+    });
 
     if (logoEl) {
         const val = currentTenant.logoUrl || currentTenant.icon || '';
@@ -264,13 +283,23 @@ async function handleUpdateProfile(e) {
             }
         }
 
+        // Obtener días seleccionados
+        const workingDays = [];
+        document.querySelectorAll('.work-day-check:checked').forEach(chk => {
+            workingDays.push(Number(chk.value));
+        });
+
         const description = document.getElementById('edit-description').value.trim();
         const address = document.getElementById('edit-address').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
         const instagram = document.getElementById('edit-instagram').value.trim();
         const startHour = document.getElementById('edit-start-hour').value;
         const endHour = document.getElementById('edit-end-hour').value;
+        const maxAdvanceDays = Number(document.getElementById('edit-max-advance').value) || 30;
         const isPaused = document.getElementById('edit-is-paused').checked;
+        const hasBreak = document.getElementById('edit-has-break').checked;
+        const breakStart = document.getElementById('edit-break-start').value;
+        const breakEnd = document.getElementById('edit-break-end') ? document.getElementById('edit-break-end').value : '14:00';
 
         await updateDoc(doc(db, "tenants", currentTenant.id), {
             description,
@@ -282,6 +311,11 @@ async function handleUpdateProfile(e) {
             instagram,
             startHour,
             endHour,
+            workingDays,
+            maxAdvanceDays,
+            hasBreak,
+            breakStart,
+            breakEnd,
             isPaused,
             photos: photoUrls
         });
@@ -297,12 +331,17 @@ async function handleUpdateProfile(e) {
             instagram,
             startHour,
             endHour,
+            workingDays,
+            maxAdvanceDays,
+            hasBreak,
+            breakStart,
+            breakEnd,
             isPaused,
             photos: photoUrls
         };
 
         populateProfileForm();
-        alert("¡Tu perfil y configuración se guardaron exitosamente!");
+        alert("¡Tu perfil y configuración de horarios se guardaron exitosamente!");
 
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
