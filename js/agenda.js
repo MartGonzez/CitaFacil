@@ -67,6 +67,15 @@ async function loadTenantData(slug) {
         nameEl.textContent = currentTenant.name || 'Agenda de Citas';
         addressEl.textContent = currentTenant.address ? `📍 ${currentTenant.address}` : '📍 Santiago, Chile';
 
+        // Configurar fecha límite máxima según la anticipación permitida
+        const dateInput = document.getElementById('booking-date');
+        if (dateInput) {
+            const maxDays = currentTenant.maxAdvanceDays || 30;
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + maxDays);
+            dateInput.max = maxDate.toISOString().split('T')[0];
+        }
+
         if (currentTenant.isPaused) {
             document.getElementById('booking-form').innerHTML = `
                 <div style="text-align: center; padding: 40px 20px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 14px; color: #b45309;">
@@ -119,7 +128,6 @@ async function loadTenantData(slug) {
         await loadServices(tenantDoc.id);
 
         if (!currentTenant.isPaused) {
-            const dateInput = document.getElementById('booking-date');
             const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
             await loadAvailableSlots(selectedDate);
         }
@@ -172,7 +180,7 @@ async function loadServices(tenantId) {
     }
 }
 
-function generateTimeSlots(startStr = "09:00", endStr = "19:00", intervalMinutes = 60) {
+function generateTimeSlots(startStr = "09:00", endStr = "19:00", intervalMinutes = 60, hasBreak = false, breakStartStr = "13:00", breakEndStr = "14:00") {
     const slots = [];
     let [startHour, startMin] = startStr.split(':').map(Number);
     let [endHour, endMin] = endStr.split(':').map(Number);
@@ -180,10 +188,21 @@ function generateTimeSlots(startStr = "09:00", endStr = "19:00", intervalMinutes
     let current = startHour * 60 + startMin;
     const end = endHour * 60 + endMin;
 
+    let bStart = 0, bEnd = 0;
+    if (hasBreak) {
+        const [bsH, bsM] = breakStartStr.split(':').map(Number);
+        const [beH, beM] = breakEndStr.split(':').map(Number);
+        bStart = bsH * 60 + bsM;
+        bEnd = beH * 60 + beM;
+    }
+
     while (current < end) {
-        const h = Math.floor(current / 60).toString().padStart(2, '0');
-        const m = (current % 60).toString().padStart(2, '0');
-        slots.push(`${h}:${m}`);
+        // Omitir bloques que caigan dentro del horario de almuerzo/descanso
+        if (!hasBreak || (current < bStart || current >= bEnd)) {
+            const h = Math.floor(current / 60).toString().padStart(2, '0');
+            const m = (current % 60).toString().padStart(2, '0');
+            slots.push(`${h}:${m}`);
+        }
         current += intervalMinutes;
     }
     return slots;
@@ -197,9 +216,24 @@ async function loadAvailableSlots(selectedDate) {
 
     if (!currentTenant) return;
 
+    // 1. Validar si el negocio trabaja en el día de la semana seleccionado
+    const dateParts = selectedDate.split('-');
+    const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+    const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 1 = Lunes...
+    const workingDays = currentTenant.workingDays || [1, 2, 3, 4, 5, 6];
+
+    if (!workingDays.includes(dayOfWeek)) {
+        slotsContainer.innerHTML = `<p class="info-text">El negocio no atiende los días seleccionados. Elige otra fecha.</p>`;
+        return;
+    }
+
     const startH = currentTenant.startHour || "09:00";
     const endH = currentTenant.endHour || "19:00";
-    const baseSlots = generateTimeSlots(startH, endH, 60);
+    const hasBreak = currentTenant.hasBreak || false;
+    const breakStart = currentTenant.breakStart || "13:00";
+    const breakEnd = currentTenant.breakEnd || "14:00";
+
+    const baseSlots = generateTimeSlots(startH, endH, 60, hasBreak, breakStart, breakEnd);
 
     try {
         const bookingsQ = query(
