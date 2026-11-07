@@ -190,7 +190,6 @@ function populateProfileForm() {
         chk.checked = activeWorkingDays.includes(Number(chk.value));
     });
 
-    // Solo poner el valor en los inputs si es una URL http (no ensucian ni rompen con Base64)
     if (logoEl) {
         const val = currentTenant.logoUrl || currentTenant.icon || '';
         logoEl.value = val.startsWith('http') ? val : '';
@@ -209,7 +208,6 @@ function populateProfileForm() {
     renderImagePreviews();
 }
 
-// Renderizar Vistas Previas y Botones para Eliminar Imagenes
 function renderImagePreviews() {
     if (!currentTenant) return;
 
@@ -220,7 +218,7 @@ function renderImagePreviews() {
         logoBox.innerHTML = `
             <div class="thumb-preview-item">
                 <img src="${logoSrc}" alt="Logo">
-                <button type="button" class="btn-delete-thumb" id="btn-delete-logo">🗑️ Eliminar Logo</button>
+                <button type="button" class="btn-delete-thumb" id="btn-delete-logo">🗑️ Eliminar</button>
             </div>
         `;
         document.getElementById('btn-delete-logo').addEventListener('click', async () => {
@@ -238,8 +236,8 @@ function renderImagePreviews() {
     if (currentTenant.coverUrl) {
         coverBox.innerHTML = `
             <div class="thumb-preview-item">
-                <img src="${currentTenant.coverUrl}" alt="Portada" style="max-height:90px; width:100%; object-fit:cover;">
-                <button type="button" class="btn-delete-thumb" id="btn-delete-cover">🗑️ Eliminar Portada</button>
+                <img src="${currentTenant.coverUrl}" alt="Portada">
+                <button type="button" class="btn-delete-thumb" id="btn-delete-cover">🗑️ Eliminar</button>
             </div>
         `;
         document.getElementById('btn-delete-cover').addEventListener('click', async () => {
@@ -353,7 +351,6 @@ async function handleUpdateProfile(e) {
             }
         }
 
-        // Eliminar duplicados si los hay
         photoUrls = [...new Set(photoUrls)];
 
         const workingDays = [];
@@ -399,7 +396,6 @@ async function handleUpdateProfile(e) {
             ...updatedData
         };
 
-        // Limpiar inputs de archivo
         if (logoFileInput) logoFileInput.value = '';
         if (coverFileInput) coverFileInput.value = '';
         const galleryFileInput = document.getElementById('upload-gallery-files');
@@ -515,7 +511,7 @@ async function loadServicesAdmin() {
     try {
         const snapshot = await getDocs(collection(db, `tenants/${currentTenant.id}/services`));
         if (snapshot.empty) {
-            container.innerHTML = '<p class="loading-text">No has agregado servicios todavía.</p>';
+            container.innerHTML = '<p class="loading-text">No me has agregado servicios todavía.</p>';
             return;
         }
 
