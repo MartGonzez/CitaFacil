@@ -1,5 +1,7 @@
-import { auth, db } from './firebase-config.js';
+import { auth, db, firebaseConfig } from './firebase-config.js';
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { 
+    getAuth,
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     signOut, 
@@ -13,16 +15,15 @@ import {
     setDoc, 
     addDoc, 
     deleteDoc,
-    updateDoc
+    updateDoc,
+    query,
+    where
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// Configuración de pagos y clave secreta
-const MERCADO_PAGO_MONTHLY_LINK = "https://www.mercadopago.cl/subscriptions/checkout?preapproval_plan_id=TU_PLAN_MENSUAL_ID";
-const MERCADO_PAGO_YEARLY_LINK = "https://www.mercadopago.cl/subscriptions/checkout?preapproval_plan_id=TU_PLAN_ANUAL_ID";
-const MASTER_ADMIN_KEY = "admin1234"; // Cambia esta clave secreta según prefieras
+// CORREO DE ADMINISTRADOR (Solo este correo verá el panel para crear clientes)
+const SUPER_ADMIN_EMAIL = "martgonzez@gmail.com";
 
 let currentTenant = null;
-let isRegisterMode = false;
 let allBookingsCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -31,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('auth-container').classList.add('hidden');
             document.getElementById('dashboard-container').classList.remove('hidden');
             document.getElementById('user-email-display').textContent = user.email;
+
+            const masterNav = document.getElementById('nav-master-admin');
+            if (masterNav) {
+                masterNav.style.display = (user.email === SUPER_ADMIN_EMAIL) ? 'flex' : 'none';
+            }
+
             await loadTenantProfile(user.uid);
         } else {
             document.getElementById('auth-container').classList.remove('hidden');
@@ -38,10 +45,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('btn-toggle-auth').addEventListener('click', toggleAuthMode);
-    document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
+    // Solo Login
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('auth-email').value.trim();
+        const password = document.getElementById('auth-password').value.trim();
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            console.error("Error de Auth:", error);
+            alert("Correo o contraseña incorrectos.");
+        }
+    });
+
     document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
+    // Formulario de Creación de Cliente (SuperAdmin)
+    const createClientForm = document.getElementById('create-client-form');
+    if (createClientForm) {
+        createClientForm.addEventListener('submit', handleCreateClientAccount);
+    }
+
+    const btnCopySummary = document.getElementById('btn-copy-summary');
+    if (btnCopySummary) {
+        btnCopySummary.addEventListener('click', () => {
+            const txt = document.getElementById('new-client-summary');
+            txt.select();
+            navigator.clipboard.writeText(txt.value);
+            alert("¡Datos copiados al portapapeles!");
+        });
+    }
+
+    // Navegación de pestañas
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -72,83 +107,95 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(input.value);
         alert("¡Enlace copiado al portapapeles!");
     });
-
-    // Eventos de Facturación / Suscripción
-    setupBillingEvents();
 });
 
-function toggleAuthMode() {
-    isRegisterMode = !isRegisterMode;
-    const subtitle = document.getElementById('auth-subtitle');
-    const submitBtn = document.getElementById('btn-auth-submit');
-    const toggleBtn = document.getElementById('btn-toggle-auth');
-    const nameField = document.getElementById('field-business-name');
-    const slugField = document.getElementById('field-slug');
-
-    if (isRegisterMode) {
-        subtitle.textContent = "Registra tu negocio en 1 minuto";
-        submitBtn.textContent = "Crear Cuenta Gratis";
-        toggleBtn.textContent = "Ya tengo cuenta (Iniciar Sesión)";
-        nameField.style.display = 'block';
-        slugField.style.display = 'block';
-    } else {
-        subtitle.textContent = "Ingresa a tu panel de control";
-        submitBtn.textContent = "Iniciar Sesión";
-        toggleBtn.textContent = "Registrar mi negocio";
-        nameField.style.display = 'none';
-        slugField.style.display = 'none';
-    }
-}
-
-async function handleAuthSubmit(e) {
+// Función para crear cliente sin cerrar tu sesión
+async function handleCreateClientAccount(e) {
     e.preventDefault();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
+    const btn = document.getElementById('btn-create-client');
+    btn.disabled = true;
+    btn.textContent = "Creando cuenta y subdominio...";
+
+    const businessName = document.getElementById('new-client-business').value.trim();
+    const rawSlug = document.getElementById('new-client-slug').value.trim().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const email = document.getElementById('new-client-email').value.trim();
+    const password = document.getElementById('new-client-password').value.trim();
+    const phone = document.getElementById('new-client-phone').value.trim();
+    const address = document.getElementById('new-client-address').value.trim();
+
+    let secondaryApp = null;
 
     try {
-        if (isRegisterMode) {
-            const businessName = document.getElementById('reg-business-name').value.trim();
-            const slug = document.getElementById('reg-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
-
-            if (!businessName || !slug) {
-                alert("Por favor completa el nombre del negocio y el enlace.");
-                return;
-            }
-
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const uid = userCredential.user.uid;
-
-            // Calcular 14 días gratis de prueba
-            const trialExpires = new Date();
-            trialExpires.setDate(trialExpires.getDate() + 14);
-
-            await setDoc(doc(db, "tenants", uid), {
-                ownerUid: uid,
-                name: businessName,
-                slug: slug,
-                email: email,
-                plan: "trial",
-                planStatus: "active",
-                planExpiresAt: trialExpires.toISOString(),
-                isLifetime: false,
-                startHour: "09:00",
-                endHour: "19:00",
-                workingDays: [1, 2, 3, 4, 5, 6],
-                maxAdvanceDays: 30,
-                hasBreak: false,
-                breakStart: "13:00",
-                breakEnd: "14:00",
-                isPaused: false,
-                photos: [],
-                createdAt: new Date()
-            }, { merge: true });
-
-        } else {
-            await signInWithEmailAndPassword(auth, email, password);
+        // 1. Verificar que el slug no esté ocupado
+        const slugQuery = query(collection(db, "tenants"), where("slug", "==", rawSlug));
+        const slugSnap = await getDocs(slugQuery);
+        if (!slugSnap.empty) {
+            alert(`El enlace "citafacil.cl/${rawSlug}" ya está ocupado por otro negocio. Elige otro.`);
+            btn.disabled = false;
+            btn.textContent = "Crear Cuenta Vitalicia y Generar Link";
+            return;
         }
+
+        // 2. Crear usuario en instancia secundaria para mantener tu sesión activa
+        secondaryApp = initializeApp(firebaseConfig, "SecondaryCreatorApp_" + Date.now());
+        const secondaryAuth = getAuth(secondaryApp);
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const newUid = userCredential.user.uid;
+
+        // 3. Guardar perfil vitalicio en Firestore
+        await setDoc(doc(db, "tenants", newUid), {
+            ownerUid: newUid,
+            name: businessName,
+            slug: rawSlug,
+            email: email,
+            phone: phone,
+            address: address,
+            plan: "lifetime",
+            isLifetime: true,
+            startHour: "09:00",
+            endHour: "19:00",
+            workingDays: [1, 2, 3, 4, 5, 6],
+            maxAdvanceDays: 30,
+            hasBreak: false,
+            breakStart: "13:00",
+            breakEnd: "14:00",
+            isPaused: false,
+            photos: [],
+            createdAt: new Date()
+        });
+
+        await signOut(secondaryAuth);
+        await deleteApp(secondaryApp);
+
+        // 4. Mostrar resumen listo para enviar por WhatsApp
+        const publicLink = `${window.location.origin}/${rawSlug}`;
+        const adminLink = `${window.location.origin}/admin/index.html`;
+        const summaryText = 
+            `¡Hola! Tu agenda online en *CitaFácil* ya está activa de por vida 🎉\n\n` +
+            `🔗 *Tu enlace público para clientes:*\n${publicLink}\n\n` +
+            `⚙️ *Tu panel de administración:*\n${adminLink}\n` +
+            `📧 *Usuario:* ${email}\n` +
+            `🔑 *Contraseña:* ${password}`;
+
+        document.getElementById('new-client-summary').value = summaryText;
+        document.getElementById('new-client-result').classList.remove('hidden');
+
+        if (phone) {
+            const cleanPhone = phone.replace(/\D/g, '');
+            document.getElementById('btn-send-client-wa').href = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(summaryText)}`;
+        }
+
+        document.getElementById('create-client-form').reset();
+
     } catch (error) {
-        console.error("Error de Auth:", error);
-        alert("Error de autenticación: " + error.message);
+        console.error("Error creando cliente:", error);
+        alert("Error al crear cuenta: " + error.message);
+        if (secondaryApp) await deleteApp(secondaryApp);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Crear Cuenta Vitalicia y Generar Link";
     }
 }
 
@@ -163,109 +210,11 @@ async function loadTenantProfile(uid) {
             document.getElementById('btn-visit-public').href = `../agenda.html?b=${currentTenant.slug}`;
 
             populateProfileForm();
-            renderBillingStatus();
             await loadBookings();
             await loadServicesAdmin();
         }
     } catch (error) {
         console.error("Error al cargar perfil:", error);
-    }
-}
-
-function renderBillingStatus() {
-    if (!currentTenant) return;
-
-    const planNameEl = document.getElementById('current-plan-name');
-    const planExpEl = document.getElementById('current-plan-expiration');
-    const badgeEl = document.getElementById('plan-status-badge');
-    const pricingContainer = document.getElementById('pricing-options-container');
-
-    if (!planNameEl || !planExpEl || !badgeEl) return;
-
-    const plan = currentTenant.plan || 'trial';
-    const isLifetime = currentTenant.isLifetime || plan === 'lifetime';
-
-    if (isLifetime) {
-        planNameEl.innerHTML = "Plan Vitalicio (Lifetime) 🎁";
-        planExpEl.textContent = "Acceso permanente activo sin fecha de vencimiento.";
-        badgeEl.innerHTML = `<span style="background:#dcfce7; color:#15803d; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">LIFETIME</span>`;
-        if (pricingContainer) pricingContainer.style.display = 'none';
-        return;
-    }
-
-    if (pricingContainer) pricingContainer.style.display = 'grid';
-
-    if (plan === 'mensual') {
-        planNameEl.textContent = "Plan Mensual ($9.900 CLP/mes)";
-    } else if (plan === 'anual') {
-        planNameEl.textContent = "Plan Anual ($99.000 CLP/año)";
-    } else {
-        planNameEl.textContent = "Período de Prueba (14 Días Gratis)";
-    }
-
-    if (currentTenant.planExpiresAt) {
-        const expDate = new Date(currentTenant.planExpiresAt);
-        const now = new Date();
-        if (now > expDate) {
-            planExpEl.textContent = `Vencido el: ${expDate.toLocaleDateString('es-CL')}`;
-            badgeEl.innerHTML = `<span style="background:#fee2e2; color:#dc2626; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">VENCIDO</span>`;
-        } else {
-            planExpEl.textContent = `Válido hasta el: ${expDate.toLocaleDateString('es-CL')}`;
-            badgeEl.innerHTML = `<span style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">ACTIVO</span>`;
-        }
-    } else {
-        planExpEl.textContent = "Estado de facturación activo.";
-        badgeEl.innerHTML = `<span style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:20px; font-weight:800; font-size:13px;">ACTIVO</span>`;
-    }
-}
-
-function setupBillingEvents() {
-    const btnMonthly = document.getElementById('btn-pay-monthly');
-    const btnYearly = document.getElementById('btn-pay-yearly');
-    const btnGrantLifetime = document.getElementById('btn-grant-lifetime');
-
-    if (btnMonthly) {
-        btnMonthly.addEventListener('click', () => {
-            window.open(`${MERCADO_PAGO_MONTHLY_LINK}&external_reference=${currentTenant.id}`, '_blank');
-        });
-    }
-
-    if (btnYearly) {
-        btnYearly.addEventListener('click', () => {
-            window.open(`${MERCADO_PAGO_YEARLY_LINK}&external_reference=${currentTenant.id}`, '_blank');
-        });
-    }
-
-    if (btnGrantLifetime) {
-        btnGrantLifetime.addEventListener('click', async () => {
-            const secretInput = document.getElementById('admin-secret-key').value.trim();
-
-            if (secretInput !== MASTER_ADMIN_KEY) {
-                alert("Clave de administrador incorrecta.");
-                return;
-            }
-
-            if (confirm(`¿Deseas otorgar acceso LIFETIME gratuito al negocio "${currentTenant.name}"?`)) {
-                try {
-                    await setDoc(doc(db, "tenants", currentTenant.id), {
-                        plan: "lifetime",
-                        planStatus: "active",
-                        isLifetime: true,
-                        planExpiresAt: null
-                    }, { merge: true });
-
-                    currentTenant.plan = "lifetime";
-                    currentTenant.isLifetime = true;
-                    currentTenant.planExpiresAt = null;
-
-                    renderBillingStatus();
-                    alert("¡Plan Lifetime asignado exitosamente!");
-                } catch (err) {
-                    console.error("Error asignando Lifetime:", err);
-                    alert("Error al guardar cambios.");
-                }
-            }
-        });
     }
 }
 
