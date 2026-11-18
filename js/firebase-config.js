@@ -5,7 +5,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase
 import { getStorage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 // Configuración de tu proyecto en Firebase Console
-const firebaseConfig = {
+export const firebaseConfig = {
     apiKey: "AIzaSyBuALpL3yASG71IY5wPkKi4gPtkIC4S_2w",
     authDomain: "citafacil-7d175.firebaseapp.com",
     projectId: "citafacil-7d175",
