@@ -67,29 +67,7 @@ async function loadTenantData(slug) {
         nameEl.textContent = currentTenant.name || 'Agenda de Citas';
         addressEl.textContent = currentTenant.address ? `📍 ${currentTenant.address}` : '📍 Santiago, Chile';
 
-        // 1. VALIDACIÓN DE EXPIRACIÓN DE PLAN / SUSCRIPCIÓN
-        const now = new Date();
-        const isLifetime = currentTenant.isLifetime || currentTenant.plan === 'lifetime';
-        let isExpired = false;
-
-        if (!isLifetime && currentTenant.planExpiresAt) {
-            const expDate = new Date(currentTenant.planExpiresAt);
-            if (now > expDate) {
-                isExpired = true;
-            }
-        }
-
-        if (isExpired) {
-            document.getElementById('booking-form').innerHTML = `
-                <div style="text-align: center; padding: 40px 20px; background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 14px; color: #991b1b;">
-                    <h3 style="font-size: 18px; font-weight: 800;">⚠️ Servicio Suspendido</h3>
-                    <p style="margin-top: 8px; font-size: 14px;">La suscripción de este negocio ha expirado. Si eres el dueño, ingresa a tu panel de control para renovarla.</p>
-                </div>
-            `;
-            return;
-        }
-
-        // 2. VALIDACIÓN DE AGENDA PAUSADA TEMPORALMENTE
+        // Validar si el dueño pausó su agenda manualmente
         if (currentTenant.isPaused) {
             document.getElementById('booking-form').innerHTML = `
                 <div style="text-align: center; padding: 40px 20px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 14px; color: #b45309;">
@@ -99,7 +77,6 @@ async function loadTenantData(slug) {
             `;
         }
 
-        // Configurar fecha límite máxima según la anticipación permitida
         const dateInput = document.getElementById('booking-date');
         if (dateInput) {
             const maxDays = currentTenant.maxAdvanceDays || 30;
@@ -150,7 +127,7 @@ async function loadTenantData(slug) {
 
         await loadServices(tenantDoc.id);
 
-        if (!currentTenant.isPaused && !isExpired) {
+        if (!currentTenant.isPaused) {
             const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
             await loadAvailableSlots(selectedDate);
         }
