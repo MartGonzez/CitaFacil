@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - CitaFácil</title>
+    <link rel="icon" type="image/png" href="../img/favicon.png">
     <link rel="stylesheet" href="../css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,25 +12,14 @@
 </head>
 <body>
 
-    <!-- AUTENTICACIÓN -->
+    <!-- AUTENTICACIÓN (SOLO LOGIN, SIN REGISTRO PÚBLICO) -->
     <div id="auth-container" class="auth-box">
         <div class="auth-header">
-            <span class="logo-icon">📅</span>
-            <h2>CitaFácil Admin</h2>
-            <p id="auth-subtitle">Ingresa a tu panel de control</p>
+            <img src="../img/logo-citafacil-light.svg" alt="CitaFácil" style="height: 48px; width: auto; margin-bottom: 10px;">
+            <p id="auth-subtitle">Ingresa a tu panel de administración</p>
         </div>
 
         <form id="auth-form">
-            <div class="form-field" id="field-business-name" style="display: none;">
-                <label for="reg-business-name">Nombre de tu Negocio</label>
-                <input type="text" id="reg-business-name" placeholder="Ej: Barbería El Sol">
-            </div>
-
-            <div class="form-field" id="field-slug" style="display: none;">
-                <label for="reg-slug">Enlace deseado (citafacil.cl/tu-slug)</label>
-                <input type="text" id="reg-slug" placeholder="ej: barberia-el-sol">
-            </div>
-
             <div class="form-field">
                 <label for="auth-email">Correo Electrónico</label>
                 <input type="email" id="auth-email" placeholder="contacto@tunegocio.cl" required>
@@ -43,9 +33,9 @@
             <button type="submit" id="btn-auth-submit" class="btn-primary">Iniciar Sesión</button>
         </form>
 
-        <div class="auth-toggle">
-            <span id="toggle-text">¿No tienes cuenta?</span>
-            <button type="button" id="btn-toggle-auth" class="btn-link">Registrar mi negocio</button>
+        <div class="auth-toggle" style="margin-top: 20px; text-align: center; font-size: 13px; color: var(--muted);">
+            <span>¿Aún no tienes tu agenda?</span>
+            <a href="https://wa.me/56946194626?text=Hola!%20Quiero%20crear%20mi%20cuenta%20en%20CitaF%C3%A1cil" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: none;">Contáctanos aquí</a>
         </div>
     </div>
 
@@ -55,14 +45,15 @@
         <aside class="sidebar">
             <div class="sidebar-top">
                 <div class="sidebar-brand">
-                    <span>📅</span> <strong>CitaFácil</strong>
+                    <img src="../img/logo-citafacil-light.svg" alt="CitaFácil" style="height: 38px; width: auto;">
                 </div>
                 
                 <nav class="sidebar-menu">
                     <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
                     <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
                     <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Horarios</button>
-                    <button class="nav-item" data-tab="tab-billing">💳 Plan y Suscripción</button>
+                    <!-- SOLO VISIBLE PARA TI -->
+                    <button class="nav-item" id="nav-master-admin" data-tab="tab-master" style="display: none; background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">👑 Crear Cliente (Admin)</button>
                 </nav>
             </div>
 
@@ -280,79 +271,65 @@
 
             </section>
 
-            <!-- TAB 4: PLAN Y SUSCRIPCIÓN -->
-<section id="tab-billing" class="tab-pane">
-    <header class="content-header">
-        <div>
-            <h2>Mi Plan y Facturación</h2>
-            <p>Gestiona tu estado de suscripción y métodos de pago.</p>
-        </div>
-    </header>
+            <!-- TAB 4: CREADOR DE CLIENTES (EXCLUSIVO SUPERADMIN) -->
+            <section id="tab-master" class="tab-pane">
+                <header class="content-header">
+                    <div>
+                        <h2>👑 Crear Nueva Cuenta de Cliente</h2>
+                        <p>Registra un nuevo negocio vendido en terreno sin cerrar tu sesión actual.</p>
+                    </div>
+                </header>
 
-    <!-- Estado Actual del Plan -->
-    <div class="service-form-card" style="margin-bottom: 24px;">
-        <h3>Estado de tu Cuenta</h3>
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-            <div>
-                <p style="font-size: 14px; color: var(--muted);">Plan Activo:</p>
-                <h4 id="current-plan-name" style="font-size: 22px; color: var(--dark); font-weight: 800; margin-top: 4px;">Cargando...</h4>
-                <p id="current-plan-expiration" style="font-size: 13px; color: var(--text); margin-top: 6px;"></p>
-            </div>
-            <div id="plan-status-badge"></div>
-        </div>
-    </div>
+                <form id="create-client-form" class="service-form-card" style="max-width: 650px;">
+                    <h3>Datos del Nuevo Negocio</h3>
 
-    <!-- Opciones de Suscripción (Se ocultan si el negocio es Lifetime) -->
-    <div id="pricing-options-container" class="form-row" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-        
-        <!-- Plan Mensual -->
-        <div class="service-card-admin" style="padding: 24px; text-align: center;">
-            <div>
-                <h4 style="font-size: 20px;">Plan Mensual</h4>
-                <div style="font-size: 32px; font-weight: 800; color: var(--primary); margin: 12px 0;">
-                    $9.900 <span style="font-size: 14px; color: var(--muted); font-weight: 500;">/mes</span>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="new-client-business">Nombre del Negocio</label>
+                            <input type="text" id="new-client-business" placeholder="Ej: Barbería Don Carlos" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="new-client-slug">Subdominio / Enlace (citafacil.cl/slug)</label>
+                            <input type="text" id="new-client-slug" placeholder="ej: barberia-don-carlos" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="new-client-email">Correo de Acceso del Cliente</label>
+                            <input type="email" id="new-client-email" placeholder="cliente@gmail.com" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="new-client-password">Contraseña Inicial (mín. 6 caracteres)</label>
+                            <input type="text" id="new-client-password" placeholder="Ej: carlos2026" required minlength="6">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="new-client-phone">WhatsApp del Negocio (con 569)</label>
+                            <input type="text" id="new-client-phone" placeholder="56912345678">
+                        </div>
+                        <div class="form-field">
+                            <label for="new-client-address">Dirección (Opcional)</label>
+                            <input type="text" id="new-client-address" placeholder="Ej: Av. Central 450">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-create-client" class="btn-primary">Crear Cuenta Vitalicia y Generar Link</button>
+                </form>
+
+                <!-- Resultado listo para enviar por WhatsApp al cliente -->
+                <div id="new-client-result" class="link-share-card hidden" style="margin-top: 24px; border-color: var(--primary); background: var(--primary-light);">
+                    <h3 style="color: var(--dark);">✅ ¡Cuenta Creada Exitosamente!</h3>
+                    <p style="font-size: 13.5px; margin-bottom: 12px;">Envíale estos accesos directamente al WhatsApp de tu cliente:</p>
+                    <textarea id="new-client-summary" rows="6" readonly style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; margin-bottom: 12px;"></textarea>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-copy-summary" class="btn-secondary">Copiar Mensaje</button>
+                        <a id="btn-send-client-wa" href="#" target="_blank" class="btn-outline-primary" style="background: #25d366; color: white; border-color: #25d366;">📲 Enviar por WhatsApp</a>
+                    </div>
                 </div>
-                <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
-                    Acceso completo a agendamientos ilimitados con renovaciones mes a mes.
-                </p>
-            </div>
-            <button id="btn-pay-monthly" class="btn-primary" style="margin-top: auto;">Suscribirse Mensual (Mercado Pago)</button>
-        </div>
-
-        <!-- Plan Anual -->
-        <div class="service-card-admin" style="padding: 24px; text-align: center; border-color: var(--primary); position: relative;">
-            <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: white; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px;">2 MESES GRATIS</div>
-            <div>
-                <h4 style="font-size: 20px;">Plan Anual</h4>
-                <div style="font-size: 32px; font-weight: 800; color: var(--primary); margin: 12px 0;">
-                    $99.000 <span style="font-size: 14px; color: var(--muted); font-weight: 500;">/año</span>
-                </div>
-                <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
-                    Ahorra con un único pago al año. Incluye soporte prioritario.
-                </p>
-            </div>
-            <button id="btn-pay-yearly" class="btn-primary" style="margin-top: auto;">Suscribirse Anual (Mercado Pago)</button>
-        </div>
-
-    </div>
-
-    <!-- Herramienta de Administrador (Para regalárselo a usuarios/amigos) -->
-    <div class="service-form-card" style="margin-top: 32px; border-color: #f59e0b; background: #fffbeb;">
-        <h3 style="color: #b45309; border-bottom-color: #fde68a;">👑 Gestión de Acceso Especial (Modo Administrador)</h3>
-        <p style="font-size: 13px; color: #b45309; margin-bottom: 16px;">
-            Ingresa tu clave de superadministrador para otorgar estado <strong>Lifetime (Vitalicio)</strong> o modificar planes manualmente a esta cuenta.
-        </p>
-        <div class="form-row">
-            <div class="form-field">
-                <label for="admin-secret-key" style="color: #b45309;">Clave de Administrador</label>
-                <input type="password" id="admin-secret-key" placeholder="••••••••">
-            </div>
-            <div class="form-field" style="display: flex; align-items: flex-end;">
-                <button type="button" id="btn-grant-lifetime" class="btn-secondary" style="background: #d97706; width: 100%;">Otorgar Acceso Lifetime 🎁</button>
-            </div>
-        </div>
-    </div>
-</section>
+            </section>
 
         </main>
     </div>
