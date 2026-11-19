@@ -262,12 +262,16 @@ function populateProfileForm() {
     }
     if (instaEl) instaEl.value = currentTenant.instagram || '';
 
+    // Limpiar el input de nuevas URLs para no duplicar las ya guardadas
     if (photosEl) {
-        const httpPhotos = (currentTenant.photos || []).filter(p => p.startsWith('http'));
-        photosEl.value = httpPhotos.join(', ');
+        photosEl.value = '';
     }
 
     renderImagePreviews();
+}
+
+function isInstagramPostUrl(url) {
+    return /^https?:\/\/(www\.)?instagram\.com\/(p|reel|tv)\/[A-Za-z0-9_-]+/i.test(url.trim());
 }
 
 function renderImagePreviews() {
@@ -310,21 +314,35 @@ function renderImagePreviews() {
     }
 
     const galleryContainer = document.getElementById('gallery-preview-admin');
+    const countEl = document.getElementById('gallery-count');
     galleryContainer.innerHTML = '';
 
     const photos = currentTenant.photos || [];
+    if (countEl) countEl.textContent = photos.length;
+
     if (photos.length === 0) {
-        galleryContainer.innerHTML = '<p class="loading-text">No has subido fotos a la galería aún.</p>';
+        galleryContainer.innerHTML = '<p class="loading-text">No has agregado fotos ni posts aún (opcional, máx. 6).</p>';
         return;
     }
 
     photos.forEach((photoUrl, index) => {
         const item = document.createElement('div');
         item.className = 'thumb-preview-item';
-        item.innerHTML = `
-            <img src="${photoUrl}" alt="Foto ${index + 1}">
-            <button type="button" class="btn-delete-thumb">🗑️ Eliminar</button>
-        `;
+
+        if (isInstagramPostUrl(photoUrl)) {
+            item.innerHTML = `
+                <div style="width:100%; height:80px; border-radius:6px; background:linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:11px; font-weight:700; text-align:center; padding:4px;">
+                    <span style="font-size:20px;">📸</span>
+                    <span>Post IG #${index + 1}</span>
+                </div>
+                <button type="button" class="btn-delete-thumb">🗑️ Eliminar</button>
+            `;
+        } else {
+            item.innerHTML = `
+                <img src="${photoUrl}" alt="Foto ${index + 1}">
+                <button type="button" class="btn-delete-thumb">🗑️ Eliminar</button>
+            `;
+        }
 
         item.querySelector('button').addEventListener('click', async () => {
             currentTenant.photos.splice(index, 1);
@@ -371,14 +389,27 @@ function fileToWebPBase64(file, maxWidth = 800, quality = 0.7) {
 function parsePhotoUrls(photosInput) {
     if (!photosInput) return [];
     return photosInput
-        .split(/(?=https?:\/\/|data:image\/)/g)
-        .map(url => url.trim().replace(/^,|,$/g, ''))
-        .filter(url => url !== '' && url.startsWith('http'));
+        .split(/[\s,]+/g)
+        .map(url => url.trim())
+        .filter(url => url !== '' && /^https?:\/\//i.test(url));
 }
 
 async function handleUpdateProfile(e) {
     e.preventDefault();
     if (!currentTenant) return;
+
+    const existingPhotos = currentTenant.photos || [];
+    const newHttpPhotos = parsePhotoUrls(document.getElementById('edit-photos').value.trim());
+    const galleryFilesInput = document.getElementById('upload-gallery-files');
+    const newFilesCount = galleryFilesInput ? galleryFilesInput.files.length : 0;
+
+    // Validar máximo de 6 elementos en total (fotos + posts de Instagram)
+    const totalProjected = existingPhotos.length + newHttpPhotos.length + newFilesCount;
+    if (totalProjected > 6) {
+        const disponibles = Math.max(0, 6 - existingPhotos.length);
+        alert(`El máximo permitido es de 6 fotos o publicaciones de Instagram en total.\nActualmente tienes ${existingPhotos.length} guardadas y solo puedes agregar ${disponibles} más.`);
+        return;
+    }
 
     const saveBtn = document.getElementById('btn-save-profile');
     saveBtn.disabled = true;
@@ -398,11 +429,8 @@ async function handleUpdateProfile(e) {
             coverUrl = await fileToWebPBase64(coverFileInput.files[0], 1000, 0.75);
         }
 
-        const existingPhotos = currentTenant.photos || [];
-        const newHttpPhotos = parsePhotoUrls(document.getElementById('edit-photos').value.trim());
         let photoUrls = [...existingPhotos, ...newHttpPhotos];
 
-        const galleryFilesInput = document.getElementById('upload-gallery-files');
         if (galleryFilesInput && galleryFilesInput.files.length > 0) {
             for (let i = 0; i < galleryFilesInput.files.length; i++) {
                 const base64Photo = await fileToWebPBase64(galleryFilesInput.files[i], 800, 0.7);
@@ -410,7 +438,7 @@ async function handleUpdateProfile(e) {
             }
         }
 
-        photoUrls = [...new Set(photoUrls)];
+        photoUrls = [...new Set(photoUrls)].slice(0, 6);
 
         const workingDays = [];
         document.querySelectorAll('.work-day-check:checked').forEach(chk => {
@@ -457,12 +485,11 @@ async function handleUpdateProfile(e) {
 
         if (logoFileInput) logoFileInput.value = '';
         if (coverFileInput) coverFileInput.value = '';
-        const galleryFileInput = document.getElementById('upload-gallery-files');
-        if (galleryFileInput) galleryFileInput.value = '';
+        if (galleryFilesInput) galleryFilesInput.value = '';
         document.getElementById('edit-photos').value = '';
 
         populateProfileForm();
-        alert("¡Tu perfil y fotos se guardaron correctamente!");
+        alert("¡Tu perfil y galería se guardaron correctamente!");
 
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
