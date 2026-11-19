@@ -171,7 +171,7 @@ async function handleCreateClientAccount(e) {
 
         // 4. Mostrar resumen listo para enviar por WhatsApp
         const publicLink = `${window.location.origin}/${rawSlug}`;
-        const adminLink = `${window.location.origin}/admin/index.html`;
+        const adminLink = `${window.location.origin}/index-admin.html`;
         const summaryText = 
             `¡Hola! Tu agenda online en *CitaFácil* ya está activa de por vida 🎉\n\n` +
             `🔗 *Tu enlace público para clientes:*\n${publicLink}\n\n` +
@@ -207,7 +207,7 @@ async function loadTenantProfile(uid) {
             
             const publicUrl = `${window.location.origin}/${currentTenant.slug}`;
             document.getElementById('public-url-input').value = publicUrl;
-            document.getElementById('btn-visit-public').href = `../agenda.html?b=${currentTenant.slug}`;
+            document.getElementById('btn-visit-public').href = `agenda.html?b=${currentTenant.slug}`;
 
             populateProfileForm();
             await loadBookings();
