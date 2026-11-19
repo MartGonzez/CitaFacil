@@ -94,12 +94,22 @@ document.addEventListener('DOMContentLoaded', () => {
         profileForm.addEventListener('submit', handleUpdateProfile);
     }
 
+    // Filtros de Citas
+    const filterOrder = document.getElementById('filter-order');
     const filterDate = document.getElementById('filter-date');
     const filterStatus = document.getElementById('filter-status');
-    if (filterDate) filterDate.value = new Date().toISOString().split('T')[0];
+    const btnClearDate = document.getElementById('btn-clear-date');
 
+    if (filterOrder) filterOrder.addEventListener('change', renderFilteredBookings);
     if (filterDate) filterDate.addEventListener('change', renderFilteredBookings);
     if (filterStatus) filterStatus.addEventListener('change', renderFilteredBookings);
+
+    if (btnClearDate && filterDate) {
+        btnClearDate.addEventListener('click', () => {
+            filterDate.value = '';
+            renderFilteredBookings();
+        });
+    }
 
     document.getElementById('btn-copy-url').addEventListener('click', () => {
         const input = document.getElementById('public-url-input');
@@ -262,7 +272,6 @@ function populateProfileForm() {
     }
     if (instaEl) instaEl.value = currentTenant.instagram || '';
 
-    // Limpiar el input de nuevas URLs para no duplicar las ya guardadas
     if (photosEl) {
         photosEl.value = '';
     }
@@ -513,18 +522,130 @@ async function loadBookings() {
     }
 }
 
+function getRelativeTimeInfo(dateStr, timeStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hour, minute] = (timeStr || '00:00').split(':').map(Number);
+
+    const targetDate = new Date(year, month - 1, day, hour, minute, 0);
+    const now = new Date();
+    const diffMs = targetDate - now;
+
+    // Formatear fecha legible en español (Ej: "vie, 27 nov")
+    const formattedDate = targetDate.toLocaleDateString('es-CL', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short'
+    });
+
+    // Comparación por día calendario (medianoche a medianoche)
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const targetDayStart = new Date(year, month - 1, day);
+    const diffDays = Math.round((targetDayStart - todayStart) / (1000 * 60 * 60 * 24));
+
+    if (diffMs < 0) {
+        if (diffDays === 0) {
+            return {
+                label: 'Hoy (ya pasó la hora)',
+                formattedDate,
+                bg: '#f1f5f9',
+                color: '#64748b',
+                border: '#cbd5e1',
+                isPast: true
+            };
+        }
+        const pastDays = Math.abs(diffDays);
+        return {
+            label: pastDays === 1 ? 'Ayer' : `Hace ${pastDays} días`,
+            formattedDate,
+            bg: '#f1f5f9',
+            color: '#64748b',
+            border: '#cbd5e1',
+            isPast: true
+        };
+    }
+
+    // Es HOY (faltan horas o minutos)
+    if (diffDays === 0) {
+        const diffMins = Math.round(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMins / 60);
+        const remMins = diffMins % 60;
+
+        let timeText = '¡Es ahora!';
+        if (diffHours >= 1) {
+            timeText = remMins > 0 ? `Hoy • en ${diffHours} h ${remMins} min` : `Hoy • en ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+        } else if (diffMins > 0) {
+            timeText = `Hoy • en ${diffMins} min`;
+        }
+
+        return {
+            label: timeText,
+            formattedDate,
+            bg: '#fef2f2',
+            color: '#dc2626',
+            border: '#fecaca',
+            isPast: false
+        };
+    }
+
+    // Es MAÑANA
+    if (diffDays === 1) {
+        return {
+            label: 'Mañana',
+            formattedDate,
+            bg: '#fffbeb',
+            color: '#d97706',
+            border: '#fde68a',
+            isPast: false
+        };
+    }
+
+    // Menos de 1 semana (2 a 6 días)
+    if (diffDays < 7) {
+        return {
+            label: `En ${diffDays} días`,
+            formattedDate,
+            bg: '#ecfdf5',
+            color: '#059669',
+            border: '#a7f3d0',
+            isPast: false
+        };
+    }
+
+    // 1 semana o más
+    const weeks = Math.floor(diffDays / 7);
+    const extraDays = diffDays % 7;
+    let weekLabel = weeks === 1 ? 'En 1 semana' : `En ${weeks} semanas`;
+    if (extraDays > 0) {
+        weekLabel += ` y ${extraDays} ${extraDays === 1 ? 'día' : 'días'}`;
+    }
+
+    return {
+        label: weekLabel,
+        formattedDate,
+        bg: '#eff6ff',
+        color: '#2563eb',
+        border: '#bfdbfe',
+        isPast: false
+    };
+}
+
 function renderFilteredBookings() {
     const listContainer = document.getElementById('bookings-list');
-    const selectedDate = document.getElementById('filter-date').value;
-    const selectedStatus = document.getElementById('filter-status').value;
+    const selectedOrder = document.getElementById('filter-order')?.value || 'upcoming';
+    const selectedDate = document.getElementById('filter-date')?.value || '';
+    const selectedStatus = document.getElementById('filter-status')?.value || 'all';
 
     listContainer.innerHTML = '';
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     let filtered = allBookingsCache.filter(b => {
         const matchesDate = !selectedDate || b.date === selectedDate;
         const status = b.status || 'confirmed';
         const matchesStatus = selectedStatus === 'all' || status === selectedStatus;
-        return matchesDate && matchesStatus;
+        const matchesUpcoming = (selectedOrder !== 'upcoming' || selectedDate !== '') ? true : (b.date >= todayStr);
+        return matchesDate && matchesStatus && matchesUpcoming;
     });
 
     if (filtered.length === 0) {
@@ -532,7 +653,12 @@ function renderFilteredBookings() {
         return;
     }
 
-    filtered.sort((a, b) => a.time.localeCompare(b.time));
+    // Ordenar cronológicamente (fecha + hora)
+    filtered.sort((a, b) => {
+        const dtA = `${a.date}T${a.time || '00:00'}`;
+        const dtB = `${b.date}T${b.time || '00:00'}`;
+        return selectedOrder === 'all-desc' ? dtB.localeCompare(dtA) : dtA.localeCompare(dtB);
+    });
 
     filtered.forEach(b => {
         const status = b.status || 'confirmed';
@@ -541,13 +667,26 @@ function renderFilteredBookings() {
         if (status === 'cancelada') statusBadge = '<span style="color:#dc2626; font-weight:700;">Cancelada</span>';
         if (status === 'no-vino') statusBadge = '<span style="color:#4b5563; font-weight:700;">No vino</span>';
 
+        const timeInfo = getRelativeTimeInfo(b.date, b.time);
+
         const card = document.createElement('div');
         card.className = 'booking-card-item';
+        card.style.borderLeft = `4px solid ${timeInfo.color}`;
+
         card.innerHTML = `
-            <h4>${b.clientName}</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; background: ${timeInfo.bg}; color: ${timeInfo.color}; border: 1px solid ${timeInfo.border};">
+                    ⏳ ${timeInfo.label}
+                </span>
+                <span style="font-size: 13px; font-weight: 800; color: var(--dark); background: var(--bg-light); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); text-transform: capitalize;">
+                    📅 ${timeInfo.formattedDate} • ${b.time} hrs
+                </span>
+            </div>
+
+            <h4 style="font-size: 17px; margin-bottom: 6px;">${b.clientName}</h4>
             <div class="booking-meta">
                 <strong>Servicio:</strong> ${b.serviceName} ($${Number(b.servicePrice).toLocaleString('es-CL')})<br>
-                <strong>Fecha:</strong> ${b.date} - ${b.time} hrs<br>
+                <strong>Fecha exacta:</strong> ${b.date}<br>
                 <strong>Estado:</strong> ${statusBadge}
             </div>
             
