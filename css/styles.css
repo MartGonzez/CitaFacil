@@ -88,8 +88,42 @@ body {
 
 .btn-pricing { display: block; width: 100%; text-align: center; padding: 14px; background: var(--primary); color: var(--white); text-decoration: none; font-weight: 700; border-radius: 8px; }
 
-.footer { background: var(--dark); color: var(--white); padding: 40px 24px; }
-.footer-container { max-width: 1140px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+.footer {
+    background: var(--dark);
+    color: var(--white);
+    padding: 56px 24px 40px;
+    text-align: center;
+}
+
+.footer-container {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.footer-brand p {
+    color: #d1fae5;
+    font-size: 15px;
+    margin-top: 4px;
+}
+
+.footer-copy {
+    width: 100%;
+    padding-top: 20px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13.5px;
+    color: #a7f3d0;
+}
 
 @media (max-width: 768px) {
     .nav-links { display: none; }
