@@ -117,6 +117,19 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(input.value);
         alert("¡Enlace copiado al portapapeles!");
     });
+
+    // Botones de Impresión y Descarga del Cartel QR
+    const btnPrintQr = document.getElementById('btn-print-qr');
+    if (btnPrintQr) {
+        btnPrintQr.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
+    const btnDownloadQrPoster = document.getElementById('btn-download-qr-poster');
+    if (btnDownloadQrPoster) {
+        btnDownloadQrPoster.addEventListener('click', downloadQrPosterAsPng);
+    }
 });
 
 // Función para crear cliente sin cerrar tu sesión
@@ -219,6 +232,7 @@ async function loadTenantProfile(uid) {
             document.getElementById('public-url-input').value = publicUrl;
             document.getElementById('btn-visit-public').href = `agenda.html?b=${currentTenant.slug}`;
 
+            renderQrSection(publicUrl);
             populateProfileForm();
             await loadBookings();
             await loadServicesAdmin();
@@ -226,6 +240,120 @@ async function loadTenantProfile(uid) {
     } catch (error) {
         console.error("Error al cargar perfil:", error);
     }
+}
+
+function renderQrSection(publicUrl) {
+    if (!currentTenant) return;
+
+    const qrNameEl = document.getElementById('qr-business-name');
+    const qrUrlEl = document.getElementById('qr-url-display');
+    const qrCanvas = document.getElementById('qr-canvas');
+
+    if (qrNameEl) qrNameEl.textContent = currentTenant.name || 'Mi Negocio';
+    if (qrUrlEl) qrUrlEl.textContent = publicUrl.replace(/^https?:\/\//, '');
+
+    if (qrCanvas && typeof QRious !== 'undefined') {
+        new QRious({
+            element: qrCanvas,
+            value: publicUrl,
+            size: 210,
+            level: 'H',
+            foreground: '#064e3b',
+            background: '#ffffff'
+        });
+    }
+}
+
+function downloadQrPosterAsPng() {
+    if (!currentTenant) return;
+    const qrCanvas = document.getElementById('qr-canvas');
+    if (!qrCanvas) return;
+
+    const posterCanvas = document.createElement('canvas');
+    const W = 760;
+    const H = 980;
+    posterCanvas.width = W;
+    posterCanvas.height = H;
+    const ctx = posterCanvas.getContext('2d');
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Borde exterior
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, W - 6, H - 6);
+
+    // Cabecera verde
+    const grad = ctx.createLinearGradient(0, 0, W, 220);
+    grad.addColorStop(0, '#064e3b');
+    grad.addColorStop(1, '#059669');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 220);
+
+    // Subtítulo cabecera
+    ctx.fillStyle = '#d1fae5';
+    ctx.font = 'bold 22px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RESERVA ONLINE 24/7', W / 2, 75);
+
+    // Nombre del negocio
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 44px Inter, sans-serif';
+    const bizName = (currentTenant.name || 'Mi Negocio').slice(0, 28);
+    ctx.fillText(bizName, W / 2, 148);
+
+    // Texto invitación
+    ctx.fillStyle = '#064e3b';
+    ctx.font = '800 32px Inter, sans-serif';
+    ctx.fillText('¡Agenda tu próxima hora aquí!', W / 2, 305);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '500 24px Inter, sans-serif';
+    ctx.fillText('Escanea el código con la cámara de tu celular', W / 2, 348);
+
+    // Recuadro punteado alrededor del QR
+    const qrSize = 360;
+    const qrX = (W - qrSize) / 2;
+    const qrY = 395;
+
+    ctx.save();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 5;
+    ctx.setLineDash([14, 10]);
+    ctx.strokeRect(qrX - 24, qrY - 24, qrSize + 48, qrSize + 48);
+    ctx.restore();
+
+    // Dibujar QR escalado
+    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+
+    // Caja inferior con URL
+    ctx.fillStyle = '#ecfdf5';
+    ctx.fillRect(90, 820, W - 180, 84);
+    ctx.strokeStyle = '#a7f3d0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(90, 820, W - 180, 84);
+
+    ctx.fillStyle = '#047857';
+    ctx.font = '600 18px Inter, sans-serif';
+    ctx.fillText('O ingresa directamente a:', W / 2, 852);
+
+    const shortUrl = `${window.location.host}/${currentTenant.slug}`;
+    ctx.fillStyle = '#064e3b';
+    ctx.font = '800 24px Inter, sans-serif';
+    ctx.fillText(shortUrl, W / 2, 886);
+
+    // Pie
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 20px Inter, sans-serif';
+    ctx.fillText('Agendamiento rápido con CitaFácil', W / 2, 950);
+
+    // Descargar PNG
+    const link = document.createElement('a');
+    link.download = `QR-Agenda-${currentTenant.slug || 'citafacil'}.png`;
+    link.href = posterCanvas.toDataURL('image/png');
+    link.click();
 }
 
 function populateProfileForm() {
