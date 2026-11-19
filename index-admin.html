@@ -15,7 +15,7 @@
     <!-- AUTENTICACIÓN (SOLO LOGIN, SIN REGISTRO PÚBLICO) -->
     <div id="auth-container" class="auth-box">
         <div class="auth-header">
-          <img src="img/logo-citafacil-light.svg" alt="CitaFácil" style="width: 230px; max-width: 100%; height: auto; margin-bottom: 12px;">
+            <img src="img/logo-citafacil-light.svg" alt="CitaFácil" style="width: 230px; max-width: 100%; height: auto; margin-bottom: 12px;">
             <p id="auth-subtitle">Ingresa a tu panel de administración</p>
         </div>
 
@@ -44,7 +44,7 @@
         
         <aside class="sidebar">
             <div class="sidebar-top">
-                <div class="sidebar-brand">
+                <div class="sidebar-brand" style="padding: 4px 8px; margin-bottom: 20px;">
                     <img src="img/logo-citafacil-light.svg" alt="CitaFácil" style="width: 100%; max-width: 215px; height: auto;">
                 </div>
                 
@@ -75,13 +75,26 @@
                 </header>
 
                 <div class="filters-bar" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
-                    <div class="form-field" style="margin-bottom:0; flex: 1; min-width: 200px;">
-                        <label for="filter-date">Filtrar por Fecha:</label>
-                        <input type="date" id="filter-date" class="date-picker-admin">
+                    <div class="form-field" style="margin-bottom:0; flex: 1; min-width: 190px;">
+                        <label for="filter-order">Orden / Vista:</label>
+                        <select id="filter-order" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; background: var(--white);">
+                            <option value="upcoming" selected>⏳ Más próximas primero</option>
+                            <option value="all-asc">📅 Todas (Más antiguas primero)</option>
+                            <option value="all-desc">🔄 Más recientes / lejanas primero</option>
+                        </select>
                     </div>
-                    <div class="form-field" style="margin-bottom:0; flex: 1; min-width: 200px;">
+
+                    <div class="form-field" style="margin-bottom:0; flex: 1; min-width: 190px;">
+                        <label for="filter-date">Fecha específica (Opcional):</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="date" id="filter-date" class="date-picker-admin" style="flex: 1;">
+                            <button type="button" id="btn-clear-date" title="Ver todas las fechas" style="padding: 0 12px; border: 1.5px solid var(--border); background: var(--white); border-radius: 10px; cursor: pointer; font-weight: 700; color: var(--muted);">✕</button>
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:0; flex: 1; min-width: 190px;">
                         <label for="filter-status">Estado de la Cita:</label>
-                        <select id="filter-status" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit;">
+                        <select id="filter-status" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; background: var(--white);">
                             <option value="all">Todas</option>
                             <option value="confirmed" selected>Pendientes / Confirmadas</option>
                             <option value="terminada">Atendidas / Terminadas</option>
@@ -129,7 +142,7 @@
                 </div>
             </section>
 
-<!-- TAB 3: CONFIGURACIÓN LANDING PAGE Y HORARIOS -->
+            <!-- TAB 3: CONFIGURACIÓN LANDING PAGE Y HORARIOS -->
             <section id="tab-settings" class="tab-pane">
                 <header class="content-header">
                     <div>
