@@ -103,38 +103,40 @@ async function loadTenantData(slug) {
             document.getElementById('hero-banner').style.backgroundImage = `url('${currentTenant.coverUrl}')`;
         }
 
-       if (currentTenant.photos && currentTenant.photos.length > 0) {
-    const galleryGrid = document.getElementById('gallery-grid');
-    if (galleryGrid) {
-        galleryGrid.innerHTML = '';
-        const items = currentTenant.photos.slice(0, 6);
+        // Galería: soporta imágenes subidas/URL y publicaciones o reels de Instagram (máx. 6)
+        if (currentTenant.photos && currentTenant.photos.length > 0) {
+            const galleryGrid = document.getElementById('gallery-grid');
+            if (galleryGrid) {
+                galleryGrid.innerHTML = '';
+                const items = currentTenant.photos.slice(0, 6);
 
-        items.forEach(rawUrl => {
-            const url = rawUrl.trim();
-            if (!url) return;
+                items.forEach(rawUrl => {
+                    const url = rawUrl.trim();
+                    if (!url) return;
 
-            const igMatch = url.match(/instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i);
-            if (igMatch) {
-                const postType = igMatch[1].toLowerCase();
-                const postId = igMatch[2];
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.instagram.com/${postType}/${postId}/embed/`;
-                iframe.className = 'ig-embed-frame';
-                iframe.setAttribute('frameborder', '0');
-                iframe.setAttribute('scrolling', 'no');
-                iframe.setAttribute('allowtransparency', 'true');
-                galleryGrid.appendChild(iframe);
-            } else {
-                const img = document.createElement('img');
-                img.src = url;
-                img.alt = currentTenant.name || 'Trabajo realizado';
-                galleryGrid.appendChild(img);
+                    const igMatch = url.match(/instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i);
+                    if (igMatch) {
+                        const postType = igMatch[1].toLowerCase();
+                        const postId = igMatch[2];
+                        const iframe = document.createElement('iframe');
+                        iframe.src = `https://www.instagram.com/${postType}/${postId}/embed/`;
+                        iframe.className = 'ig-embed-frame';
+                        iframe.setAttribute('frameborder', '0');
+                        iframe.setAttribute('scrolling', 'no');
+                        iframe.setAttribute('allowtransparency', 'true');
+                        galleryGrid.appendChild(iframe);
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.alt = currentTenant.name || 'Trabajo realizado';
+                        galleryGrid.appendChild(img);
+                    }
+                });
+
+                document.getElementById('gallery-section').classList.remove('hidden');
             }
-        });
+        }
 
-        document.getElementById('gallery-section').classList.remove('hidden');
-    }
-}
         if (currentTenant.instagram) {
             const socialEl = document.getElementById('social-links');
             if (socialEl) {
