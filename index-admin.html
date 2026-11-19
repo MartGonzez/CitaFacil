@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - CitaFácil</title>
+    <link rel="icon" type="image/png" href="../img/favicon.png">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- AUTENTICACIÓN (SOLO LOGIN, SIN REGISTRO PÚBLICO) -->
+    <div id="auth-container" class="auth-box">
+        <div class="auth-header">
+            <img src="../img/logo-citafacil-light.svg" alt="CitaFácil" style="height: 48px; width: auto; margin-bottom: 10px;">
+            <p id="auth-subtitle">Ingresa a tu panel de administración</p>
+        </div>
+
+        <form id="auth-form">
+            <div class="form-field">
+                <label for="auth-email">Correo Electrónico</label>
+                <input type="email" id="auth-email" placeholder="contacto@tunegocio.cl" required>
+            </div>
+
+            <div class="form-field">
+                <label for="auth-password">Contraseña</label>
+                <input type="password" id="auth-password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" id="btn-auth-submit" class="btn-primary">Iniciar Sesión</button>
+        </form>
+
+        <div class="auth-toggle" style="margin-top: 20px; text-align: center; font-size: 13px; color: var(--muted);">
+            <span>¿Aún no tienes tu agenda?</span>
+            <a href="https://wa.me/56946194626?text=Hola!%20Quiero%20crear%20mi%20cuenta%20en%20CitaF%C3%A1cil" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: none;">Contáctanos aquí</a>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard-container" class="dashboard-layout hidden">
+        
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="sidebar-brand">
+                    <img src="../img/logo-citafacil-light.svg" alt="CitaFácil" style="height: 38px; width: auto;">
+                </div>
+                
+                <nav class="sidebar-menu">
+                    <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
+                    <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
+                    <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Horarios</button>
+                    <!-- SOLO VISIBLE PARA TI -->
+                    <button class="nav-item" id="nav-master-admin" data-tab="tab-master" style="display: none; background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">👑 Crear Cliente (Admin)</button>
+                </nav>
+            </div>
+
+            <div class="sidebar-footer">
+                <span id="user-email-display">usuario@negocio.cl</span>
+                <button id="btn-logout" class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <!-- TAB 1: CITAS AGENDADAS -->
+            <section id="tab-bookings" class="tab-pane active">
+                <header class="content-header">
+                    <div>
+                        <h2>Citas Agendadas</h2>
+                        <p>Gestiona las reservas, estados y asistencia de tus clientes.</p>
+                    </div>
+                </header>
+
+                <div class="filters-bar" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <div class="form-field" style="margin-bottom:0; flex: 1; min-width: 200px;">
+                        <label for="filter-date">Filtrar por Fecha:</label>
+                        <input type="date" id="filter-date" class="date-picker-admin">
+                    </div>
+                    <div class="form-field" style="margin-bottom:0; flex: 1; min-width: 200px;">
+                        <label for="filter-status">Estado de la Cita:</label>
+                        <select id="filter-status" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit;">
+                            <option value="all">Todas</option>
+                            <option value="confirmed" selected>Pendientes / Confirmadas</option>
+                            <option value="terminada">Atendidas / Terminadas</option>
+                            <option value="cancelada">Canceladas</option>
+                            <option value="no-vino">No vino</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="bookings-list" class="bookings-grid">
+                    <p class="loading-text">Cargando reservas...</p>
+                </div>
+            </section>
+
+            <!-- TAB 2: SERVICIOS -->
+            <section id="tab-services" class="tab-pane">
+                <header class="content-header">
+                    <div>
+                        <h2>Servicios y Precios</h2>
+                        <p>Agrega o elimina los servicios que ofreces a tus clientes.</p>
+                    </div>
+                </header>
+
+                <form id="add-service-form" class="service-form-card">
+                    <h3>Agregar Nuevo Servicio</h3>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="service-name">Nombre del Servicio</label>
+                            <input type="text" id="service-name" placeholder="Ej: Perfilado de Barba" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="service-price">Precio (CLP)</label>
+                            <input type="number" id="service-price" placeholder="8000" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="service-duration">Duración (minutos)</label>
+                            <input type="number" id="service-duration" placeholder="30" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Guardar Servicio</button>
+                </form>
+
+                <div id="services-list-admin" class="services-admin-grid">
+                    <p class="loading-text">Cargando servicios...</p>
+                </div>
+            </section>
+
+            <!-- TAB 3: CONFIGURACIÓN LANDING PAGE Y HORARIOS -->
+            <section id="tab-settings" class="tab-pane">
+                <header class="content-header">
+                    <div>
+                        <h2>Mi Perfil y Enlace Público</h2>
+                        <p>Personaliza cómo se ve tu negocio para tus clientes y configura tu disponibilidad laboral.</p>
+                    </div>
+                </header>
+
+                <div class="link-share-card">
+                    <h3>Tu Enlace de Agendamiento:</h3>
+                    <div class="url-copy-box">
+                        <input type="text" id="public-url-input" readonly>
+                        <button id="btn-copy-url" class="btn-secondary">Copiar Link</button>
+                    </div>
+                    <a id="btn-visit-public" href="#" target="_blank" class="btn-outline-primary">Ver Agenda Pública ↗</a>
+                </div>
+
+                <form id="profile-config-form" class="service-form-card" style="margin-top: 24px;">
+                    <h3>Horarios de Trabajo y Disponibilidad</h3>
+                    
+                    <div class="form-field">
+                        <label>Días de Atención Laboral</label>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="1" checked> Lun</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="2" checked> Mar</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="3" checked> Mié</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="4" checked> Jue</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="5" checked> Vie</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="6" checked> Sáb</label>
+                            <label style="display:flex; align-items:center; gap:4px; font-weight:500; cursor:pointer;"><input type="checkbox" class="work-day-check" value="0"> Dom</label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="edit-start-hour">Hora de Apertura</label>
+                            <input type="time" id="edit-start-hour" value="09:00">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-end-hour">Hora de Cierre</label>
+                            <input type="time" id="edit-end-hour" value="19:00">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-max-advance">Anticipación Máxima de Reserva (días)</label>
+                            <input type="number" id="edit-max-advance" value="30" min="1" max="180">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                            <input type="checkbox" id="edit-has-break" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <label for="edit-has-break" style="margin-bottom: 0; cursor: pointer;">Pausa de Almuerzo / Descanso</label>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-break-start">Inicio Colación</label>
+                            <input type="time" id="edit-break-start" value="13:00">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-break-end">Fin Colación</label>
+                            <input type="time" id="edit-break-end" value="14:00">
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="background: var(--bg-light); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border); margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="edit-is-paused" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <span style="font-weight: 700; color: var(--dark);">Pausar Agenda Temporalmente (Bloquear todas las reservas)</span>
+                        </label>
+                        <p style="font-size: 12.5px; color: var(--muted); margin-top: 4px; margin-left: 28px;">
+                            Si activas esta opción, los clientes verán un aviso de que el negocio no está recibiendo citas.
+                        </p>
+                    </div>
+
+                    <h3 style="margin-top: 28px;">Personalizar Mi Landing Page</h3>
+
+                    <div class="form-field">
+                        <label for="edit-description">Descripción del Negocio</label>
+                        <textarea id="edit-description" rows="3" placeholder="Contamos con amplia experiencia ofreciendo la mejor atención..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="edit-address">Dirección Física</label>
+                            <input type="text" id="edit-address" placeholder="Ej: Av. Providencia 1234, Local 5">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-phone">Teléfono / WhatsApp de Atención</label>
+                            <input type="text" id="edit-phone" placeholder="56912345678">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="upload-logo-file">Subir Logo / Icono</label>
+                            <input type="file" id="upload-logo-file" accept="image/*">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-logo">O pegar URL del Logo / Emoji</label>
+                            <input type="text" id="edit-logo" placeholder="💈 o https://...">
+                        </div>
+                    </div>
+                    <div id="logo-preview-box" style="margin-bottom: 16px;"></div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="upload-cover-file">Subir Imagen de Banner (Portada)</label>
+                            <input type="file" id="upload-cover-file" accept="image/*">
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-cover">O pegar URL del Banner</label>
+                            <input type="text" id="edit-cover" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div id="cover-preview-box" style="margin-bottom: 16px;"></div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="edit-instagram">Usuario de Instagram (sin @)</label>
+                            <input type="text" id="edit-instagram" placeholder="mi_barberia">
+                        </div>
+                        <div class="form-field">
+                            <label for="upload-gallery-files">Subir Fotos del Local (múltiples)</label>
+                            <input type="file" id="upload-gallery-files" accept="image/*" multiple>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="edit-photos">URLs de Fotos adicionales (separadas por comas)</label>
+                        <input type="text" id="edit-photos" placeholder="https://foto1.jpg, https://foto2.jpg">
+                    </div>
+
+                    <div class="form-field">
+                        <label>Fotos Subidas Actuales (Haz clic en Eliminar para borrarlas)</label>
+                        <div id="gallery-preview-admin" class="gallery-preview-grid"></div>
+                    </div>
+
+                    <button type="submit" id="btn-save-profile" class="btn-primary">Guardar Cambios del Perfil</button>
+                </form>
+
+            </section>
+
+            <!-- TAB 4: CREADOR DE CLIENTES (EXCLUSIVO SUPERADMIN) -->
+            <section id="tab-master" class="tab-pane">
+                <header class="content-header">
+                    <div>
+                        <h2>👑 Crear Nueva Cuenta de Cliente</h2>
+                        <p>Registra un nuevo negocio vendido en terreno sin cerrar tu sesión actual.</p>
+                    </div>
+                </header>
+
+                <form id="create-client-form" class="service-form-card" style="max-width: 650px;">
+                    <h3>Datos del Nuevo Negocio</h3>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="new-client-business">Nombre del Negocio</label>
+                            <input type="text" id="new-client-business" placeholder="Ej: Barbería Don Carlos" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="new-client-slug">Subdominio / Enlace (citafacil.cl/slug)</label>
+                            <input type="text" id="new-client-slug" placeholder="ej: barberia-don-carlos" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="new-client-email">Correo de Acceso del Cliente</label>
+                            <input type="email" id="new-client-email" placeholder="cliente@gmail.com" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="new-client-password">Contraseña Inicial (mín. 6 caracteres)</label>
+                            <input type="text" id="new-client-password" placeholder="Ej: carlos2026" required minlength="6">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="new-client-phone">WhatsApp del Negocio (con 569)</label>
+                            <input type="text" id="new-client-phone" placeholder="56912345678">
+                        </div>
+                        <div class="form-field">
+                            <label for="new-client-address">Dirección (Opcional)</label>
+                            <input type="text" id="new-client-address" placeholder="Ej: Av. Central 450">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-create-client" class="btn-primary">Crear Cuenta Vitalicia y Generar Link</button>
+                </form>
+
+                <!-- Resultado listo para enviar por WhatsApp al cliente -->
+                <div id="new-client-result" class="link-share-card hidden" style="margin-top: 24px; border-color: var(--primary); background: var(--primary-light);">
+                    <h3 style="color: var(--dark);">✅ ¡Cuenta Creada Exitosamente!</h3>
+                    <p style="font-size: 13.5px; margin-bottom: 12px;">Envíale estos accesos directamente al WhatsApp de tu cliente:</p>
+                    <textarea id="new-client-summary" rows="6" readonly style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; margin-bottom: 12px;"></textarea>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-copy-summary" class="btn-secondary">Copiar Mensaje</button>
+                        <a id="btn-send-client-wa" href="#" target="_blank" class="btn-outline-primary" style="background: #25d366; color: white; border-color: #25d366;">📲 Enviar por WhatsApp</a>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script type="module" src="../js/firebase-config.js"></script>
+    <script type="module" src="../js/admin.js"></script>
+</body>
+</html>
