@@ -23,6 +23,59 @@ import {
 // CORREO DE ADMINISTRADOR (Solo este correo verá el panel para crear clientes)
 const SUPER_ADMIN_EMAIL = "martgonzez@gmail.com";
 
+// 6 PALETAS DE COLORES PARA EL CARTEL Y CÓDIGO QR
+const QR_PALETTES = {
+    emerald: {
+        dark: '#064e3b',
+        main: '#059669',
+        dashed: '#10b981',
+        lightBg: '#ecfdf5',
+        lightBorder: '#a7f3d0',
+        subtext: '#d1fae5'
+    },
+    classic: {
+        dark: '#0f172a',
+        main: '#334155',
+        dashed: '#475569',
+        lightBg: '#f1f5f9',
+        lightBorder: '#cbd5e1',
+        subtext: '#e2e8f0'
+    },
+    ocean: {
+        dark: '#1e3a8a',
+        main: '#2563eb',
+        dashed: '#3b82f6',
+        lightBg: '#eff6ff',
+        lightBorder: '#bfdbfe',
+        subtext: '#dbeafe'
+    },
+    rose: {
+        dark: '#881337',
+        main: '#e11d48',
+        dashed: '#f43f5e',
+        lightBg: '#fff1f2',
+        lightBorder: '#fecdd3',
+        subtext: '#ffe4e6'
+    },
+    amber: {
+        dark: '#78350f',
+        main: '#d97706',
+        dashed: '#f59e0b',
+        lightBg: '#fffbeb',
+        lightBorder: '#fde68a',
+        subtext: '#fef3c7'
+    },
+    violet: {
+        dark: '#4c1d95',
+        main: '#7c3aed',
+        dashed: '#8b5cf6',
+        lightBg: '#f5f3ff',
+        lightBorder: '#ddd6fe',
+        subtext: '#ede9fe'
+    }
+};
+
+let currentQrPaletteKey = 'emerald';
 let currentTenant = null;
 let allBookingsCache = [];
 
@@ -116,6 +169,19 @@ document.addEventListener('DOMContentLoaded', () => {
         input.select();
         navigator.clipboard.writeText(input.value);
         alert("¡Enlace copiado al portapapeles!");
+    });
+
+    // Selector de Paletas de Colores para el QR
+    document.querySelectorAll('.qr-palette-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.qr-palette-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentQrPaletteKey = btn.dataset.palette || 'emerald';
+            if (currentTenant) {
+                const publicUrl = `${window.location.origin}/${currentTenant.slug}`;
+                renderQrSection(publicUrl);
+            }
+        });
     });
 
     // Botones de Impresión y Descarga del Cartel QR
@@ -245,12 +311,34 @@ async function loadTenantProfile(uid) {
 function renderQrSection(publicUrl) {
     if (!currentTenant) return;
 
+    const palette = QR_PALETTES[currentQrPaletteKey] || QR_PALETTES.emerald;
+
     const qrNameEl = document.getElementById('qr-business-name');
     const qrUrlEl = document.getElementById('qr-url-display');
     const qrCanvas = document.getElementById('qr-canvas');
 
+    const posterHeader = document.getElementById('qr-poster-header');
+    const inviteTitle = document.getElementById('qr-invite-title');
+    const dashedBox = document.getElementById('qr-dashed-box');
+    const urlBox = document.getElementById('qr-url-box');
+    const urlLabel = document.getElementById('qr-url-label');
+    const brandAccent = document.getElementById('qr-brand-accent');
+
     if (qrNameEl) qrNameEl.textContent = currentTenant.name || 'Mi Negocio';
-    if (qrUrlEl) qrUrlEl.textContent = publicUrl.replace(/^https?:\/\//, '');
+    if (qrUrlEl) {
+        qrUrlEl.textContent = publicUrl.replace(/^https?:\/\//, '');
+        qrUrlEl.style.color = palette.dark;
+    }
+
+    if (posterHeader) posterHeader.style.background = `linear-gradient(135deg, ${palette.dark} 0%, ${palette.main} 100%)`;
+    if (inviteTitle) inviteTitle.style.color = palette.dark;
+    if (dashedBox) dashedBox.style.borderColor = palette.dashed;
+    if (urlBox) {
+        urlBox.style.background = palette.lightBg;
+        urlBox.style.borderColor = palette.lightBorder;
+    }
+    if (urlLabel) urlLabel.style.color = palette.main;
+    if (brandAccent) brandAccent.style.color = palette.main;
 
     if (qrCanvas && typeof QRious !== 'undefined') {
         new QRious({
@@ -258,7 +346,7 @@ function renderQrSection(publicUrl) {
             value: publicUrl,
             size: 210,
             level: 'H',
-            foreground: '#064e3b',
+            foreground: palette.dark,
             background: '#ffffff'
         });
     }
@@ -268,6 +356,8 @@ function downloadQrPosterAsPng() {
     if (!currentTenant) return;
     const qrCanvas = document.getElementById('qr-canvas');
     if (!qrCanvas) return;
+
+    const palette = QR_PALETTES[currentQrPaletteKey] || QR_PALETTES.emerald;
 
     const posterCanvas = document.createElement('canvas');
     const W = 760;
@@ -285,15 +375,15 @@ function downloadQrPosterAsPng() {
     ctx.lineWidth = 6;
     ctx.strokeRect(3, 3, W - 6, H - 6);
 
-    // Cabecera verde
+    // Cabecera con color seleccionado
     const grad = ctx.createLinearGradient(0, 0, W, 220);
-    grad.addColorStop(0, '#064e3b');
-    grad.addColorStop(1, '#059669');
+    grad.addColorStop(0, palette.dark);
+    grad.addColorStop(1, palette.main);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, 220);
 
     // Subtítulo cabecera
-    ctx.fillStyle = '#d1fae5';
+    ctx.fillStyle = palette.subtext;
     ctx.font = 'bold 22px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('RESERVA ONLINE 24/7', W / 2, 75);
@@ -305,7 +395,7 @@ function downloadQrPosterAsPng() {
     ctx.fillText(bizName, W / 2, 148);
 
     // Texto invitación
-    ctx.fillStyle = '#064e3b';
+    ctx.fillStyle = palette.dark;
     ctx.font = '800 32px Inter, sans-serif';
     ctx.fillText('¡Agenda tu próxima hora aquí!', W / 2, 305);
 
@@ -319,7 +409,7 @@ function downloadQrPosterAsPng() {
     const qrY = 395;
 
     ctx.save();
-    ctx.strokeStyle = '#10b981';
+    ctx.strokeStyle = palette.dashed;
     ctx.lineWidth = 5;
     ctx.setLineDash([14, 10]);
     ctx.strokeRect(qrX - 24, qrY - 24, qrSize + 48, qrSize + 48);
@@ -329,18 +419,18 @@ function downloadQrPosterAsPng() {
     ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
 
     // Caja inferior con URL
-    ctx.fillStyle = '#ecfdf5';
+    ctx.fillStyle = palette.lightBg;
     ctx.fillRect(90, 820, W - 180, 84);
-    ctx.strokeStyle = '#a7f3d0';
+    ctx.strokeStyle = palette.lightBorder;
     ctx.lineWidth = 2;
     ctx.strokeRect(90, 820, W - 180, 84);
 
-    ctx.fillStyle = '#047857';
+    ctx.fillStyle = palette.main;
     ctx.font = '600 18px Inter, sans-serif';
     ctx.fillText('O ingresa directamente a:', W / 2, 852);
 
     const shortUrl = `${window.location.host}/${currentTenant.slug}`;
-    ctx.fillStyle = '#064e3b';
+    ctx.fillStyle = palette.dark;
     ctx.font = '800 24px Inter, sans-serif';
     ctx.fillText(shortUrl, W / 2, 886);
 
