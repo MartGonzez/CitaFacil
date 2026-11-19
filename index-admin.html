@@ -9,6 +9,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Librería ligera para generar el Código QR en Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        /* Estilos de impresión: imprime solo el cartel QR limpio */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-qr-poster, #printable-qr-poster * {
+                visibility: visible;
+            }
+            #printable-qr-poster {
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                width: 380px !important;
+                box-shadow: none !important;
+                border: 2px solid #064e3b !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -52,6 +76,7 @@
                     <button class="nav-item active" data-tab="tab-bookings">📅 Citas Agendadas</button>
                     <button class="nav-item" data-tab="tab-services">✂️ Servicios y Precios</button>
                     <button class="nav-item" data-tab="tab-settings">⚙️ Mi Perfil y Horarios</button>
+                    <button class="nav-item" data-tab="tab-qr">📱 Mi Código QR</button>
                     <!-- SOLO VISIBLE PARA TI -->
                     <button class="nav-item" id="nav-master-admin" data-tab="tab-master" style="display: none; background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">👑 Crear Cliente (Admin)</button>
                 </nav>
@@ -284,7 +309,70 @@
 
             </section>
 
-            <!-- TAB 4: CREADOR DE CLIENTES (EXCLUSIVO SUPERADMIN) -->
+            <!-- TAB 4: MI CÓDIGO QR IMPRIMIBLE -->
+            <section id="tab-qr" class="tab-pane">
+                <header class="content-header">
+                    <div>
+                        <h2>📱 Código QR de tu Agenda</h2>
+                        <p>Imprime este cartel y colócalo en tu mostrador, espejo o vitrina para que tus clientes reserven al instante.</p>
+                    </div>
+                </header>
+
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; margin-top: 12px;">
+                    
+                    <!-- CARTEL VISUAL IMPRIMIBLE -->
+                    <div id="printable-qr-poster" style="width: 100%; max-width: 380px; background: #ffffff; border-radius: 24px; border: 2px solid #e2e8f0; box-shadow: 0 14px 35px rgba(6, 78, 59, 0.08); overflow: hidden; text-align: center;">
+                        
+                        <!-- Cabecera Verde Esmeralda -->
+                        <div style="background: linear-gradient(135deg, #064e3b 0%, #059669 100%); color: #ffffff; padding: 26px 20px 22px;">
+                            <span style="display: inline-block; background: rgba(255,255,255,0.18); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 10px;">
+                                📅 Reserva Online 24/7
+                            </span>
+                            <h3 id="qr-business-name" style="font-size: 22px; font-weight: 800; margin: 0; line-height: 1.25;">
+                                Tu Negocio
+                            </h3>
+                        </div>
+
+                        <!-- Cuerpo con el QR -->
+                        <div style="padding: 28px 24px 24px;">
+                            <p style="font-size: 15px; font-weight: 700; color: #064e3b; margin-bottom: 6px;">
+                                ¡Agenda tu próxima hora aquí!
+                            </p>
+                            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
+                                Escanea el código con la cámara de tu celular
+                            </p>
+
+                            <div style="display: inline-flex; padding: 16px; background: #ffffff; border-radius: 20px; border: 2.5px dashed #10b981; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.12);">
+                                <canvas id="qr-canvas"></canvas>
+                            </div>
+
+                            <div style="margin-top: 20px; padding: 10px 14px; background: #ecfdf5; border-radius: 12px; border: 1px solid #a7f3d0;">
+                                <span style="display: block; font-size: 11px; color: #047857; font-weight: 600; margin-bottom: 2px;">O ingresa directamente a:</span>
+                                <strong id="qr-url-display" style="font-size: 13.5px; color: #064e3b; word-break: break-all;">citafacil.cl/tu-negocio</strong>
+                            </div>
+                        </div>
+
+                        <!-- Pie del Cartel -->
+                        <div style="background: #f8fafc; padding: 12px 16px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <span style="font-size: 11.5px; color: #64748b; font-weight: 600;">Agendamiento rápido con</span>
+                            <strong style="font-size: 12.5px; color: #059669; font-weight: 800;">CitaFácil</strong>
+                        </div>
+                    </div>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                        <button type="button" id="btn-print-qr" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px;">
+                            🖨️ Imprimir Cartel QR
+                        </button>
+                        <button type="button" id="btn-download-qr-poster" class="btn-outline-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; background: var(--white);">
+                            ⬇️ Descargar Cartel (PNG)
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- TAB 5: CREADOR DE CLIENTES (EXCLUSIVO SUPERADMIN) -->
             <section id="tab-master" class="tab-pane">
                 <header class="content-header">
                     <div>
