@@ -131,8 +131,16 @@ body {
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.ig-embed-frame {
+    width: 100%;
+    min-height: 360px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--white);
 }
 
 .gallery-grid img {
